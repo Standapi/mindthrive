@@ -7,17 +7,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles AI Chat AJAX Request
  */
 function mindthrive_handle_chat() {
-    check_ajax_referer('mindthrive-chat-nonce', 'security');
+check_ajax_referer('mindthrive-chat-nonce', 'security');
+mindthrive_verify_request();
 
-    if ( ! is_user_logged_in() ) {
-        wp_send_json_error(['message' => 'Please log in to use the chat.']);
-    }
-
-    if ( ! defined('MINDTHRIVE_OPENAI_API_KEY') || ! MINDTHRIVE_OPENAI_API_KEY ) {
-        wp_send_json_error([
-            'message' => 'API key is not defined. Please set MINDTHRIVE_OPENAI_API_KEY in wp-config.php.'
-        ]);
-    }
 
 
 
