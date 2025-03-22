@@ -16,6 +16,17 @@ if (!defined('ABSPATH')) {
 /**
  * Create the database table upon plugin activation.
  */
+function mindthrive_verify_request() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Please log in.']);
+    }
+
+    if (!defined('MINDTHRIVE_OPENAI_API_KEY') || !MINDTHRIVE_OPENAI_API_KEY) {
+        wp_send_json_error(['message' => 'API key not configured.']);
+    }
+}
+
+
 function mindthrive_ai_install() {
     global $wpdb;
 
@@ -109,14 +120,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 function mindthrive_handle_chat_stream() {
     check_ajax_referer('mindthrive-chat-nonce', 'security');
+    mindthrive_verify_request();
 
-    if (!is_user_logged_in()) {
-        wp_send_json_error(['message' => 'Please log in.']);
-    }
-
-    if (!defined('MINDTHRIVE_OPENAI_API_KEY')) {
-        wp_send_json_error(['message' => 'API key not defined.']);
-    }
 
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
