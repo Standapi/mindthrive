@@ -19,8 +19,7 @@ function mindthrive_handle_chat() {
         ]);
     }
 
-    // Explicitly log your API key temporarily for debugging purposes (remove after confirming)
-    error_log('OpenAI API Key Loaded: ' . MINDTHRIVE_OPENAI_API_KEY);
+
 
     $user_id = get_current_user_id();
     $message = isset($_POST['message']) ? sanitize_text_field($_POST['message']) : '';
