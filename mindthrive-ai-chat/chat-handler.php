@@ -106,7 +106,7 @@ Continuously remember past interactions and refer naturally to previous points d
     }
 
     $ai_reply_raw = $response_body['choices'][0]['message']['content'];
-    $ai_reply = sanitize_textarea_field($ai_reply_raw); // preserves line breaks
+    $ai_reply = wp_kses_post($ai_reply_raw);
 
     $wpdb->insert($table_name, [
         'user_id'      => $user_id,
