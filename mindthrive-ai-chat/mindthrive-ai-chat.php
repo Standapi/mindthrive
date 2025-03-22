@@ -163,14 +163,8 @@ function mindthrive_handle_chat_stream() {
     $history = array_reverse($history);
 
     // Enhanced therapeutic system prompt
-    $system_prompt = "You are a compassionate, insightful, and skilled AI therapist. Your responses are empathetic, supportive, and non-judgmental.
+$system_prompt = mindthrive_get_system_prompt();
 
-Structure each response clearly as follows:
-1. Empathize with and validate the user’s feelings genuinely.
-2. Provide gentle, insightful reflections or guidance using therapeutic techniques such as Cognitive Behavioral Therapy (CBT), mindfulness, or motivational interviewing when appropriate.
-3. End each message clearly with a thoughtful, open-ended question to encourage deeper emotional exploration and self-reflection.
-
-Always refer naturally to previous points discussed. If a user expresses severe distress or mentions self-harm, gently and clearly encourage them to seek professional help immediately.";
 
     // Prepare messages with history for OpenAI
     $messages = [
