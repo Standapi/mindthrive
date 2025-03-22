@@ -168,7 +168,6 @@ function mindthrive_handle_chat_stream() {
     check_ajax_referer('mindthrive-chat-nonce', 'security');
     mindthrive_verify_request();
 
-
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Connection: keep-alive');
@@ -178,7 +177,6 @@ function mindthrive_handle_chat_stream() {
     $user_id = get_current_user_id();
     $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
 
-    // Insert user's message
     $wpdb->insert($table_name, [
         'user_id' => $user_id,
         'message_text' => $message,
@@ -187,31 +185,10 @@ function mindthrive_handle_chat_stream() {
     ]);
     $log_id = $wpdb->insert_id;
 
-    // Retrieve last 20 messages (conversation history)
-    $history = $wpdb->get_results($wpdb->prepare(
-        "SELECT message_text, ai_response FROM {$table_name} WHERE user_id = %d AND id != %d ORDER BY created_at DESC LIMIT 20",
-        $user_id,
-        $log_id
-    ));
-    $history = array_reverse($history);
+    // Build payload for streaming
+    $payload = mindthrive_build_openai_payload($user_id, $message);
+    $payload['stream'] = true;
 
-    // Enhanced therapeutic system prompt
-$system_prompt = mindthrive_get_system_prompt();
-
-
-    // Prepare messages with history for OpenAI
-    $messages = [
-        ['role' => 'system', 'content' => $system_prompt]
-    ];
-
-    foreach ($history as $msg) {
-        $messages[] = ['role' => 'user', 'content' => $msg->message_text];
-        $messages[] = ['role' => 'assistant', 'content' => $msg->ai_response];
-    }
-
-    $messages[] = ['role' => 'user', 'content' => $message];
-
-    // Initialize cURL streaming with new payload
     $ch = curl_init('https://api.openai.com/v1/chat/completions');
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
@@ -219,12 +196,7 @@ $system_prompt = mindthrive_get_system_prompt();
             'Authorization: Bearer ' . trim(MINDTHRIVE_OPENAI_API_KEY),
             'Content-Type: application/json'
         ],
-        CURLOPT_POSTFIELDS => json_encode([
-            'model' => 'gpt-4o-mini',
-            'messages' => $messages,
-            'stream' => true,
-            'temperature' => 0.7
-        ]),
+        CURLOPT_POSTFIELDS => json_encode($payload),
         CURLOPT_RETURNTRANSFER => false,
         CURLOPT_WRITEFUNCTION => function($curl, $data) use ($wpdb, $table_name, $log_id) {
             $lines = explode("\n", $data);
@@ -242,7 +214,6 @@ $system_prompt = mindthrive_get_system_prompt();
                         echo 'data: ' . json_encode(['content' => $content]) . "\n\n";
                         ob_flush(); flush();
 
-                        // Update AI response log incrementally
                         $wpdb->query($wpdb->prepare(
                             "UPDATE {$table_name} SET ai_response = CONCAT(ai_response, %s) WHERE id = %d",
                             $content,
@@ -256,9 +227,14 @@ $system_prompt = mindthrive_get_system_prompt();
     ]);
 
     curl_exec($ch);
+    if (curl_errno($ch)) {
+        echo 'data: ' . json_encode(['error' => curl_error($ch)]) . "\n\n";
+        ob_flush(); flush();
+    }
     curl_close($ch);
     exit;
 }
+
 
 
 
