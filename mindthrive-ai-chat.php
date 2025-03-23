@@ -167,11 +167,16 @@ function mindthrive_get_message_usage() {
     $date = date('Y-m-d');
 
     // Count today's messages
-    $message_count = (int) $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM {$table_name} WHERE user_id = %d AND DATE(created_at) = %s",
-        $user_id,
-        $date
-    ));
+    $user_id = get_current_user_id();
+$today = date('Y-m-d');
+
+$usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
+if (!is_array($usage) || $usage['date'] !== $today) {
+    $usage = ['date' => $today, 'count' => 0];
+}
+
+$message_count = $usage['count'];
+
 
     // Determine max allowed
     if (current_user_can('administrator')) {

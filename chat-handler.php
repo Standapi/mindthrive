@@ -17,16 +17,25 @@ function mindthrive_handle_chat() {
     $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
 
     // Daily limit logic
-    $message_count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM {$table_name} WHERE user_id = %d AND DATE(created_at) = %s",
-        $user_id,
-        $date
-    ));
+    $user_id = get_current_user_id();
+    $today = date('Y-m-d');
+    
+    // Load message usage from usermeta
+    $usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
+    
+    // If not set or it's a new day, reset the counter
+    if (!is_array($usage) || $usage['date'] !== $today) {
+        $usage = ['date' => $today, 'count' => 0];
+    }
+    
+    // How many messages the user has sent today
+    $message_count = $usage['count'];
+    
 
     if (current_user_can('administrator')) {
         $max_messages = PHP_INT_MAX;
     } elseif (current_user_can('heal_user')) {
-        $max_messages = 100;
+        $max_messages = 9999;
     } elseif (current_user_can('empower_user')) {
         $max_messages = 50;
     } elseif (current_user_can('support_user')) {
@@ -71,6 +80,11 @@ function mindthrive_handle_chat() {
         'ai_response'  => $ai_reply,
         'created_at'   => current_time('mysql')
     ]);
+
+    // Increment and save usage count
+$usage['count']++;
+update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
+
 
     wp_send_json_success(['message' => $ai_reply]);
 }
