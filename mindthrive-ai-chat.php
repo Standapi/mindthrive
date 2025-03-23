@@ -226,6 +226,34 @@ function mindthrive_handle_chat_stream() {
     $user_id = get_current_user_id();
     $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
 
+    $today = date('Y-m-d');
+$usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
+
+// Reset usage if it's a new day
+if (!is_array($usage) || !isset($usage['date'], $usage['count']) || $usage['date'] !== $today) {
+    $usage = ['date' => $today, 'count' => 0];
+}
+
+// Check limits BEFORE processing
+if (current_user_can('administrator')) {
+    $max_messages = PHP_INT_MAX;
+} elseif (current_user_can('heal_user')) {
+    $max_messages = 9999;
+} elseif (current_user_can('empower_user')) {
+    $max_messages = 50;
+} elseif (current_user_can('support_user')) {
+    $max_messages = 20;
+} else {
+    $max_messages = 5;
+}
+
+if ($usage['count'] >= $max_messages) {
+    echo "data: " . json_encode(['error' => 'You have reached your daily message limit.']) . "\n\n";
+    ob_flush(); flush();
+    exit;
+}
+
+
     // ✅ Step 3: Insert initial user message to DB
     $wpdb->insert($table_name, [
         'user_id'      => $user_id,
@@ -273,6 +301,11 @@ function mindthrive_handle_chat_stream() {
                     }
                 }
             }
+
+            // Once full message received, increment usage
+            $usage['count']++;
+            update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
+
             return strlen($data);
         }
     ]);
