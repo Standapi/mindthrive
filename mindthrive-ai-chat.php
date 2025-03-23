@@ -164,16 +164,11 @@ function mindthrive_get_message_usage() {
     $user_id = get_current_user_id();
     $today = date('Y-m-d');
 
-    // ✅ Read the usage from usermeta, but DO NOT reset it here
     $usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
+    $message_count = (is_array($usage) && isset($usage['date'], $usage['count']) && $usage['date'] === $today)
+        ? $usage['count']
+        : 0;
 
-    if (is_array($usage) && isset($usage['date'], $usage['count']) && $usage['date'] === $today) {
-        $message_count = $usage['count'];
-    } else {
-        $message_count = 0;
-    }
-
-    // ✅ Define max messages based on role
     if (current_user_can('administrator')) {
         $max = PHP_INT_MAX;
     } elseif (current_user_can('heal_user')) {
@@ -191,6 +186,7 @@ function mindthrive_get_message_usage() {
         'max'  => $max
     ]);
 }
+
 
 add_action('wp_ajax_get_message_usage', 'mindthrive_get_message_usage');
 
@@ -229,12 +225,12 @@ function mindthrive_handle_chat_stream() {
     $today = date('Y-m-d');
 $usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
 
-// Reset usage if it's a new day
-if (!is_array($usage) || !isset($usage['date'], $usage['count']) || $usage['date'] !== $today) {
+// Properly reset usage ONLY if needed
+if (!is_array($usage) || !isset($usage['date']) || $usage['date'] !== $today) {
     $usage = ['date' => $today, 'count' => 0];
 }
 
-// Check limits BEFORE processing
+// Set the limit based on role
 if (current_user_can('administrator')) {
     $max_messages = PHP_INT_MAX;
 } elseif (current_user_can('heal_user')) {
@@ -247,11 +243,13 @@ if (current_user_can('administrator')) {
     $max_messages = 5;
 }
 
+// Check message count BEFORE continuing
 if ($usage['count'] >= $max_messages) {
     echo "data: " . json_encode(['error' => 'You have reached your daily message limit.']) . "\n\n";
     ob_flush(); flush();
     exit;
 }
+
 
 
     // ✅ Step 3: Insert initial user message to DB
@@ -291,6 +289,7 @@ if ($usage['count'] >= $max_messages) {
                         $content = $json['choices'][0]['delta']['content'];
                         echo "data: " . json_encode(['content' => $content]) . "\n\n";
                         ob_flush(); flush();
+                        
 
                         // ✅ Update DB response incrementally
                         $wpdb->query($wpdb->prepare(
@@ -302,20 +301,24 @@ if ($usage['count'] >= $max_messages) {
                 }
             }
 
-            // Once full message received, increment usage
-            $usage['count']++;
-            update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
 
-            return strlen($data);
         }
     ]);
 
     // ✅ Step 5: Execute and clean up
     curl_exec($ch);
+                // Once full message received, increment usage
+                $usage['count']++;
+                error_log("Updating usage: " . print_r($usage, true));
+
+                update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
+    
+                return strlen($data);
     if (curl_errno($ch)) {
         echo "data: " . json_encode(['error' => curl_error($ch)]) . "\n\n";
         ob_flush(); flush();
     }
+    
     curl_close($ch);
     exit;
 }
