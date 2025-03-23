@@ -415,21 +415,22 @@
   
 
   .message-text ul,
-.message-text ol {
-  margin: 0.5rem 1rem;
-  padding-left: 1rem;
-  list-style-type: disc;
-}
-
-.message-text li {
-  margin-bottom: 0.3rem;
-}
-
-.message-text strong {
-  color: #5b2ca0;
-  font-weight: 600;
-}
-
-.message-text p {
-  margin: 0.75rem 0;
-}
+  .message-text ol {
+	margin: 0.5rem 1rem;
+	padding-left: 1rem;
+	list-style: disc;
+  }
+  
+  .message-text li {
+	margin-bottom: 0.3rem;
+  }
+  
+  .message-text strong {
+	font-weight: bold;
+	color: #5b2ca0;
+  }
+  
+  .message-text p {
+	margin: 0.75rem 0;
+  }
+  

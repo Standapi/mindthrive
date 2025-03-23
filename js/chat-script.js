@@ -172,33 +172,39 @@ document.addEventListener("DOMContentLoaded", function() {
 
         let markdownBuffer = '';
 
+
+
         eventSource.onmessage = (e) => {
-            if (e.data === '[DONE]') {
-                typingIndicator.style.display = 'none';
-                eventSource.close();
-                sendBtn.disabled = false;
+        if (e.data === '[DONE]') {
+            typingIndicator.style.display = 'none';
+            eventSource.close();
+            sendBtn.disabled = false;
 
-                // ✅ Convert Markdown to HTML and inject
-                const html = marked.parse(markdownBuffer);
-                typeTextAsHTML(textSpan, html);
+            // ✅ Parse and format the full markdown response
+            const formattedHTML = marked.parse(markdownBuffer);
 
-                // Scroll to bottom
-                aiMessageDiv.scrollIntoView({ behavior: 'smooth' });
+            // Replace the streamed text with formatted HTML
+            textSpan.innerHTML = formattedHTML;
+            aiMessageDiv.scrollIntoView({ behavior: 'smooth' });
 
-                // Clear buffer
-                markdownBuffer = '';
-                return;
+            markdownBuffer = '';
+            return;
+        }
+
+        try {
+            const json = JSON.parse(e.data);
+            if (json.content) {
+            markdownBuffer += json.content;
+
+            // ✅ Stream text as plain text (typing effect)
+            textSpan.textContent += json.content;
+            textSpan.scrollIntoView({ behavior: 'auto' });
             }
-
-            try {
-                const json = JSON.parse(e.data);
-                if (json.content) {
-                    markdownBuffer += json.content;
-                }
-            } catch (err) {
-                console.error("JSON parse error:", err, e.data);
-            }
+        } catch (err) {
+            console.error("JSON parse error:", err, e.data);
+        }
         };
+
 
 
         eventSource.onerror = (err) => {
