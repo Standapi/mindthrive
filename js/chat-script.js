@@ -80,15 +80,15 @@ document.addEventListener("DOMContentLoaded", function() {
             })
         })
         .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data.history) {
-                data.data.history.forEach(msg => {
-                    appendMessage(msg.message_text, 'user');
-                    appendMessage(marked.parse(msg.ai_response), 'ai');
-
+            console.log("Chat history response:", data);
+            if (data.success && Array.isArray(data.data.history)) {
+                data.data.history.forEach((msg, index) => {
+                    console.log(`Rendering message #${index}`, msg);
+                    if (msg.message_text) appendMessage(msg.message_text, 'user');
+                    if (msg.ai_response) appendMessage(marked.parse(msg.ai_response), 'ai');
                 });
             } else {
-                console.error("Could not load chat history:", data);
+                console.warn("Unexpected chat history structure or empty response:", data);
             }
         })
         .catch(error => {
