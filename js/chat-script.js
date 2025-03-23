@@ -1,4 +1,46 @@
 document.addEventListener("DOMContentLoaded", function() {
+    let messageLimit = { used: 0, max: 0 };
+
+    function updateUsageUI() {
+        const counter = document.getElementById("usage-counter");
+        if (!counter) return;
+    
+        const { used, max } = messageLimit;
+        const percent = used / max;
+    
+        counter.textContent = `${used} / ${max} messages used today`;
+    
+        counter.classList.remove("low", "medium", "high");
+        if (percent < 0.5) {
+            counter.classList.add("low");
+        } else if (percent < 1) {
+            counter.classList.add("medium");
+        } else {
+            counter.classList.add("high");
+        }
+    }
+    
+    
+    function fetchMessageUsage() {
+        fetch(mindthriveChat.ajaxurl, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+                action: "get_message_usage",
+                security: mindthriveChat.security
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                messageLimit = data.data;
+                updateUsageUI();
+            }
+        });
+    }
+    
+
+
     const chatWindow = document.getElementById("chat-window");
     const userInput  = document.getElementById("user-input");
     const sendBtn    = document.getElementById("send-btn");
@@ -28,6 +70,7 @@ document.addEventListener("DOMContentLoaded", function() {
      * Fetch chat history from the server and display it.
      */
     function loadChatHistory() {
+        fetchMessageUsage();
         fetch(mindthriveChat.ajaxurl, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -59,6 +102,14 @@ document.addEventListener("DOMContentLoaded", function() {
      * Sends the user's message to the server via AJAX and handles the streaming response.
      */
     function sendMessage() {
+        if (messageLimit.used >= messageLimit.max) {
+            alert("You've reached your daily message limit. Upgrade your plan for more support.");
+            return;
+        }
+        messageLimit.used += 1;
+        updateUsageUI();      
+        
+        
         const message = userInput.value.trim();
         if (!message) return;
 

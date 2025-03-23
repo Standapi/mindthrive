@@ -159,7 +159,46 @@ function fetch_chat_history() {
     wp_send_json_success(['history' => $history]);
 }
 
+
 add_action('wp_ajax_fetch_chat_history', 'fetch_chat_history');
+
+function mindthrive_get_message_usage() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Not logged in.']);
+    }
+
+    global $wpdb;
+    $user_id = get_current_user_id();
+    $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
+    $date = date('Y-m-d');
+
+    // Count today's messages
+    $message_count = (int) $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM {$table_name} WHERE user_id = %d AND DATE(created_at) = %s",
+        $user_id,
+        $date
+    ));
+
+    // Determine max allowed
+    if (current_user_can('administrator')) {
+        $max = PHP_INT_MAX;
+    } elseif (current_user_can('heal_user')) {
+        $max = 9999;
+    } elseif (current_user_can('empower_user')) {
+        $max = 50;
+    } elseif (current_user_can('support_user')) {
+        $max = 20;
+    } else {
+        $max = 5;
+    }
+
+    wp_send_json_success([
+        'used' => $message_count,
+        'max'  => $max
+    ]);
+}
+add_action('wp_ajax_get_message_usage', 'mindthrive_get_message_usage');
+
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
