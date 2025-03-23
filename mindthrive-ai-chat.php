@@ -161,21 +161,19 @@ function mindthrive_get_message_usage() {
         wp_send_json_error(['message' => 'Not logged in.']);
     }
 
-    global $wpdb;
-    $user_id = get_current_user_id();
-    $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
-    $date = date('Y-m-d');
-
-    // Count today's messages
     $user_id = get_current_user_id();
     $today = date('Y-m-d');
 
+    // ✅ Read the usage from usermeta, but DO NOT reset it here
     $usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
-    $message_count = (is_array($usage) && $usage['date'] === $today) ? $usage['count'] : 0;
 
+    if (is_array($usage) && isset($usage['date'], $usage['count']) && $usage['date'] === $today) {
+        $message_count = $usage['count'];
+    } else {
+        $message_count = 0;
+    }
 
-
-    // Determine max allowed
+    // ✅ Define max messages based on role
     if (current_user_can('administrator')) {
         $max = PHP_INT_MAX;
     } elseif (current_user_can('heal_user')) {
@@ -193,6 +191,7 @@ function mindthrive_get_message_usage() {
         'max'  => $max
     ]);
 }
+
 add_action('wp_ajax_get_message_usage', 'mindthrive_get_message_usage');
 
 

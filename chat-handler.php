@@ -17,20 +17,16 @@ function mindthrive_handle_chat() {
     $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
 
     // Daily limit logic
-    $user_id = get_current_user_id();
     $today = date('Y-m-d');
-    
-    // Load message usage from usermeta
-    $usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
-    
-    // If not set or it's a new day, reset the counter
-    if (!is_array($usage) || $usage['date'] !== $today) {
-        $usage = ['date' => $today, 'count' => 0];
-    }
-    
-    // How many messages the user has sent today
-    $usage['count']++;
-update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
+
+// Load current usage
+$usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
+if (!is_array($usage) || $usage['date'] !== $today) {
+    $usage = ['date' => $today, 'count' => 0];
+}
+
+$message_count = $usage['count']; // Don't increment yet
+
 
     
 
@@ -49,6 +45,7 @@ update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
     if ($message_count >= $max_messages) {
         wp_send_json_error(['message' => 'You have reached your daily message limit. Please upgrade your plan or contact support.']);
     }
+    
 
     // Build OpenAI request
     $payload = mindthrive_build_openai_payload($user_id, $message);
@@ -84,8 +81,9 @@ update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
     ]);
 
     // Increment and save usage count
-$usage['count']++;
-update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
+    $usage['count']++;
+    update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
+    
 
 
     wp_send_json_success(['message' => $ai_reply]);
