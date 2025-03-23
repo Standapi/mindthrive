@@ -309,8 +309,6 @@ if ($usage['count'] >= $max_messages) {
     curl_exec($ch);
                 // Once full message received, increment usage
                 $usage['count']++;
-                error_log("Updating usage: " . print_r($usage, true));
-
                 update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
     
                 return strlen($data);
