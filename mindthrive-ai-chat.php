@@ -227,8 +227,7 @@ if ($usage['count'] >= $max_messages) {
     $log_id = $wpdb->insert_id;
 
     // ✅ Step 4: Prepare GPT streaming request
-    $payload = MindThrive_OpenAI_Service::build_payload($user_id, $message);
-
+    $payload = mindthrive_build_openai_payload($user_id, $message);
     $payload['stream'] = true;
 
     $ch = curl_init('https://api.openai.com/v1/chat/completions');
