@@ -156,6 +156,10 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!message) return;
 
         appendMessage(message, "user");
+        requestAnimationFrame(() => {
+            chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+          });
+        
         userInput.value = "";
         sendBtn.disabled = true;
 
