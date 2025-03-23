@@ -98,6 +98,46 @@ document.addEventListener("DOMContentLoaded", function() {
     // Load history on startup
     loadChatHistory();
 
+
+    function typeTextAsHTML(element, html, delay = 30) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const nodes = Array.from(tempDiv.childNodes);
+    
+        function renderNode(index = 0) {
+            if (index >= nodes.length) return;
+    
+            const node = nodes[index];
+            const clone = node.cloneNode(true);
+    
+            // If it's text, animate it letter-by-letter
+            if (clone.nodeType === Node.TEXT_NODE) {
+                let i = 0;
+                const fullText = clone.textContent;
+                const span = document.createElement('span');
+                element.appendChild(span);
+    
+                function typeChar() {
+                    if (i < fullText.length) {
+                        span.textContent += fullText.charAt(i);
+                        i++;
+                        setTimeout(typeChar, delay);
+                    } else {
+                        renderNode(index + 1); // move to next sibling
+                    }
+                }
+    
+                typeChar();
+            } else {
+                element.appendChild(clone);
+                renderNode(index + 1);
+            }
+        }
+    
+        renderNode();
+    }
+    
+
     /**
      * Sends the user's message to the server via AJAX and handles the streaming response.
      */
@@ -128,24 +168,36 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const eventSource = new EventSource(`${mindthriveChat.ajaxurl}?action=mindthrive_chat_stream&message=${encodeURIComponent(message)}&security=${mindthriveChat.security}`);
 
+        let markdownBuffer = '';
+
         eventSource.onmessage = (e) => {
             if (e.data === '[DONE]') {
                 typingIndicator.style.display = 'none';
                 eventSource.close();
                 sendBtn.disabled = false;
+
+                // ✅ Convert Markdown to HTML and inject
+                const html = marked.parse(markdownBuffer);
+                typeTextAsHTML(textSpan, html);
+
+                // Scroll to bottom
+                aiMessageDiv.scrollIntoView({ behavior: 'smooth' });
+
+                // Clear buffer
+                markdownBuffer = '';
                 return;
             }
+
             try {
                 const json = JSON.parse(e.data);
                 if (json.content) {
-                    textSpan.innerHTML += json.content;
-                    messageDiv.scrollIntoView({ behavior: 'smooth' });
-
+                    markdownBuffer += json.content;
                 }
             } catch (err) {
                 console.error("JSON parse error:", err, e.data);
             }
         };
+
 
         eventSource.onerror = (err) => {
             console.error("Streaming error:", err);
