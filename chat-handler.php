@@ -29,7 +29,9 @@ function mindthrive_handle_chat() {
     }
     
     // How many messages the user has sent today
-    $message_count = $usage['count'];
+    $usage['count']++;
+update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
+
     
 
     if (current_user_can('administrator')) {

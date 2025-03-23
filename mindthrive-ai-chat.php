@@ -168,14 +168,11 @@ function mindthrive_get_message_usage() {
 
     // Count today's messages
     $user_id = get_current_user_id();
-$today = date('Y-m-d');
+    $today = date('Y-m-d');
 
-$usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
-if (!is_array($usage) || $usage['date'] !== $today) {
-    $usage = ['date' => $today, 'count' => 0];
-}
+    $usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
+    $message_count = (is_array($usage) && $usage['date'] === $today) ? $usage['count'] : 0;
 
-$message_count = $usage['count'];
 
 
     // Determine max allowed
