@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const textSpan = document.createElement("div");
         textSpan.classList.add("message-text");
-        textSpan.textContent = text;
+        textSpan.innerHTML = text;
 
         messageDiv.appendChild(textSpan);
         chatWindow.appendChild(messageDiv);
@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", function() {
             try {
                 const json = JSON.parse(e.data);
                 if (json.content) {
-                    textSpan.textContent += json.content;
+                    textSpan.innerHTML += json.content;
                     messageDiv.scrollIntoView({ behavior: 'smooth' });
 
                 }

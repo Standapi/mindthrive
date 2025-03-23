@@ -28,20 +28,18 @@
 
         <!-- Chat Window -->
         <div class="chat-window" id="chat-window">
-        
-    <div id="usage-counter" class="usage-banner">
-      Loading usage...
-    </div>
-    <!-- Initial AI message remains here -->
-</div>
 
-            <!-- Initial AI Message -->
-            <div class="message ai-message">
-                <div class="message-text">
-                    Hey! I'm here to listen, ask questions, and help you sort through your thoughts.
-                </div>
+    <div id="usage-counter" class="usage-banner">
+    Loading usage...
+    </div>
+
+    <!-- Initial AI Message SHOULD be here -->
+    <div class="message ai-message">
+        <div class="message-text">
+        Hey! I'm here to listen, ask questions, and help you sort through your thoughts.
+    </div>
+    </div>
             </div>
-        </div>
         <div id="typing-indicator" class="typing-indicator" style="display: none;">
     <span></span><span></span><span></span>
 </div>
