@@ -27,43 +27,8 @@ function mindthrive_verify_request() {
 }
 
 
-function mindthrive_get_system_prompt() {
-    return "You are a compassionate AI therapist. You are here to listen, ask questions, and help sort through thoughts.";
-}
-
-function mindthrive_build_openai_payload($user_id, $message, $include_history = true) {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
-
-    $messages = [
-        ['role' => 'system', 'content' => mindthrive_get_system_prompt()]
-    ];
-
-    if ($include_history) {
-        $history = $wpdb->get_results($wpdb->prepare(
-            "SELECT message_text, ai_response FROM {$table_name} WHERE user_id = %d ORDER BY created_at DESC LIMIT 20",
-            $user_id
-        ));
-
-        $history = array_reverse($history); // Show oldest first
-
-        foreach ($history as $msg) {
-            $messages[] = ['role' => 'user', 'content' => $msg->message_text];
-            $messages[] = ['role' => 'assistant', 'content' => $msg->ai_response];
-        }
-    }
-
-    $messages[] = ['role' => 'user', 'content' => $message];
-
-    return [
-        "model"       => "gpt-4o-mini",
-        "messages"    => $messages,
-        "temperature" => 0.7,
-        "max_tokens"  => 1000,
-        "top_p"       => 1,
-        "stream"      => false
-    ];
-}
+// Moved to service class
+require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
 
 
 function mindthrive_ai_install() {
