@@ -24,12 +24,17 @@
             </div>
         </div>
     </div>
-    <div id="usage-counter" style="text-align:center; font-size: 0.9rem; margin-bottom: 8px; color: #666;">
-  Loading usage...
-</div>
+    
 
         <!-- Chat Window -->
         <div class="chat-window" id="chat-window">
+        
+    <div id="usage-counter" class="usage-banner">
+      Loading usage...
+    </div>
+    <!-- Initial AI message remains here -->
+</div>
+
             <!-- Initial AI Message -->
             <div class="message ai-message">
                 <div class="message-text">

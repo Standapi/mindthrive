@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         messageDiv.appendChild(textSpan);
         chatWindow.appendChild(messageDiv);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+        messageDiv.scrollIntoView({ behavior: 'smooth' });
     }
 
     /**
@@ -139,7 +139,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 const json = JSON.parse(e.data);
                 if (json.content) {
                     textSpan.textContent += json.content;
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    messageDiv.scrollIntoView({ behavior: 'smooth' });
+
                 }
             } catch (err) {
                 console.error("JSON parse error:", err, e.data);
