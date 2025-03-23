@@ -28,14 +28,13 @@ function mindthrive_verify_request() {
 
 
 function mindthrive_get_system_prompt() {
-    return "You are a compassionate, insightful, and highly skilled AI therapist. Your approach is empathetic, supportive, and non-judgmental. Each response you provide includes these elements clearly structured:
+    return "You are a compassionate AI therapist. Your goal is to engage users in emotionally intelligent, thoughtful conversations.
 
-1. **Empathy & Validation:** Start by acknowledging and validating the user's feelings genuinely and warmly.
-2. **Reflection & Insight:** Offer a gentle, insightful reflection or perspective based on psychological principles.
-3. **Therapeutic Techniques:** Clearly incorporate relevant therapeutic approaches such as Cognitive Behavioral Therapy (CBT), mindfulness practices, motivational interviewing, or acceptance and commitment therapy (ACT) where suitable.
-4. **Relevant Questioning:** Always end by asking a thoughtful, reflective, open-ended question that encourages further emotional exploration, self-awareness, and insight.
+Be supportive, empathetic, and insightful. Use real therapeutic techniques like CBT, mindfulness, or ACT — but keep language warm and human.
 
-Continuously remember past interactions and refer naturally to previous points discussed. If the user indicates severe distress or suicidal ideation, provide a supportive message urging immediate professional help.";
+When appropriate, ask meaningful open-ended questions to help the user reflect or go deeper. Keep responses friendly, concise, and never judgmental.
+
+Avoid sounding scripted. Instead, feel natural, like a skilled listener.";
 }
 
 function mindthrive_build_openai_payload($user_id, $message, $include_history = true) {
@@ -165,40 +164,57 @@ add_action('wp_ajax_fetch_chat_history', 'fetch_chat_history');
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 function mindthrive_handle_chat_stream() {
-    check_ajax_referer('mindthrive-chat-nonce', 'security');
-    mindthrive_verify_request();
+    // ✅ Step 1: Disable buffering and compression
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    if (function_exists('apache_setenv')) {
+        @apache_setenv('no-gzip', '1');
+    }
+
+    @ini_set('zlib.output_compression', 'Off');
+    @ini_set('output_buffering', 'Off');
+    @ini_set('implicit_flush', '1');
 
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Connection: keep-alive');
+
+    ob_implicit_flush(true);
+
+    // ✅ Step 2: Security and access check
+    check_ajax_referer('mindthrive-chat-nonce', 'security');
+    mindthrive_verify_request();
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
     $user_id = get_current_user_id();
     $message = isset($_GET['message']) ? sanitize_text_field($_GET['message']) : '';
 
+    // ✅ Step 3: Insert initial user message to DB
     $wpdb->insert($table_name, [
-        'user_id' => $user_id,
+        'user_id'      => $user_id,
         'message_text' => $message,
-        'ai_response' => '',
-        'created_at' => current_time('mysql')
+        'ai_response'  => '',
+        'created_at'   => current_time('mysql')
     ]);
     $log_id = $wpdb->insert_id;
 
-    // Build payload for streaming
+    // ✅ Step 4: Prepare GPT streaming request
     $payload = mindthrive_build_openai_payload($user_id, $message);
     $payload['stream'] = true;
 
     $ch = curl_init('https://api.openai.com/v1/chat/completions');
     curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_HTTPHEADER => [
+        CURLOPT_POST           => true,
+        CURLOPT_HTTPHEADER     => [
             'Authorization: Bearer ' . trim(MINDTHRIVE_OPENAI_API_KEY),
             'Content-Type: application/json'
         ],
-        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_RETURNTRANSFER => false,
-        CURLOPT_WRITEFUNCTION => function($curl, $data) use ($wpdb, $table_name, $log_id) {
+        CURLOPT_WRITEFUNCTION  => function($ch, $data) use ($wpdb, $table_name, $log_id) {
             $lines = explode("\n", $data);
             foreach ($lines as $line) {
                 if (strpos($line, 'data: ') === 0) {
@@ -211,9 +227,10 @@ function mindthrive_handle_chat_stream() {
                     $json = json_decode($jsonData, true);
                     if (!empty($json['choices'][0]['delta']['content'])) {
                         $content = $json['choices'][0]['delta']['content'];
-                        echo 'data: ' . json_encode(['content' => $content]) . "\n\n";
+                        echo "data: " . json_encode(['content' => $content]) . "\n\n";
                         ob_flush(); flush();
 
+                        // ✅ Update DB response incrementally
                         $wpdb->query($wpdb->prepare(
                             "UPDATE {$table_name} SET ai_response = CONCAT(ai_response, %s) WHERE id = %d",
                             $content,
@@ -226,14 +243,16 @@ function mindthrive_handle_chat_stream() {
         }
     ]);
 
+    // ✅ Step 5: Execute and clean up
     curl_exec($ch);
     if (curl_errno($ch)) {
-        echo 'data: ' . json_encode(['error' => curl_error($ch)]) . "\n\n";
+        echo "data: " . json_encode(['error' => curl_error($ch)]) . "\n\n";
         ob_flush(); flush();
     }
     curl_close($ch);
     exit;
 }
+
 
 
 
