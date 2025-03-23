@@ -84,7 +84,8 @@ document.addEventListener("DOMContentLoaded", function() {
             if (data.success && data.data.history) {
                 data.data.history.forEach(msg => {
                     appendMessage(msg.message_text, 'user');
-                    appendMessage(msg.ai_response, 'ai');
+                    appendMessage(marked.parse(msg.ai_response), 'ai');
+
                 });
             } else {
                 console.error("Could not load chat history:", data);
@@ -110,7 +111,6 @@ document.addEventListener("DOMContentLoaded", function() {
             const node = nodes[index];
             const clone = node.cloneNode(true);
     
-            // If it's text, animate it letter-by-letter
             if (clone.nodeType === Node.TEXT_NODE) {
                 let i = 0;
                 const fullText = clone.textContent;
@@ -120,10 +120,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 function typeChar() {
                     if (i < fullText.length) {
                         span.textContent += fullText.charAt(i);
+                        span.scrollIntoView({ behavior: 'auto' });
                         i++;
                         setTimeout(typeChar, delay);
                     } else {
-                        renderNode(index + 1); // move to next sibling
+                        renderNode(index + 1);
                     }
                 }
     
@@ -136,6 +137,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
         renderNode();
     }
+    
     
 
     /**
