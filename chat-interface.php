@@ -1,8 +1,4 @@
 <div class="chat-container">
-        <!-- Toast-style usage banner -->
-        <div id="usage-counter" class="usage-toast">
-        Loading usage...
-    </div>
     <div class="chat-box">
         <!-- Chat Header -->
         <div class="chat-header">
@@ -55,6 +51,11 @@
         </div>
     </div>
 </div>
+<!-- Usage Counter -->
+<div id="usage-counter" class="usage-bar">
+  Loading usage...
+</div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
