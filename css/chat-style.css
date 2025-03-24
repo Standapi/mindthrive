@@ -434,3 +434,14 @@
 	margin: 0.75rem 0;
   }
   
+  .chat-loading-indicator {
+    text-align: center;
+    padding: 0.5rem;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: #999;
+}
+
+.chat-loading-indicator.hidden {
+    display: none;
+}

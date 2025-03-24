@@ -25,7 +25,9 @@
         </div>
     </div>
     
-
+        <div id="chat-loading-indicator" class="chat-loading-indicator hidden">
+        Loading older messages...
+    </div>
         <!-- Chat Window -->
         <div class="chat-window" id="chat-window">
 

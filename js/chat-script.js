@@ -1,7 +1,11 @@
 document.addEventListener("DOMContentLoaded", function() {
+    const loadingIndicator = document.getElementById("chat-loading-indicator");
+
     let messageLimit = { used: 0, max: 0 };
     let loadedMessageCount = 0;
     let allMessagesLoaded = false;
+    let isLoadingHistory = false;
+
 
 
     function updateUsageUI() {
@@ -83,6 +87,7 @@ document.addEventListener("DOMContentLoaded", function() {
             })
         })
         .then(response => response.json())
+        
         .then(data => {
             if (data.success && Array.isArray(data.data.history)) {
                 if (data.data.history.length < 20) {
@@ -116,7 +121,8 @@ document.addEventListener("DOMContentLoaded", function() {
     
                 if (data.success && Array.isArray(data.data.history)) {
                     const newMessages = data.data.history.length;
-                    loadedMessageCount = offset + newMessages;
+                    loadedMessageCount += data.data.history.length;
+
                 }
                 
 
@@ -130,19 +136,24 @@ document.addEventListener("DOMContentLoaded", function() {
     chatWindow.addEventListener('scroll', () => {
         if (chatWindow.scrollTop < 50 && !allMessagesLoaded && !isLoadingHistory) {
             isLoadingHistory = true;
+            loadingIndicator.classList.remove("hidden");
+    
+            const previousScrollHeight = chatWindow.scrollHeight;
+    
             loadChatHistory(loadedMessageCount, true).then(() => {
                 isLoadingHistory = false;
+                loadingIndicator.classList.add("hidden");
+    
+                const newScrollHeight = chatWindow.scrollHeight;
+                const scrollDelta = newScrollHeight - previousScrollHeight;
+    
+                // ✅ Scroll pinning: preserve scroll position after prepend
+                chatWindow.scrollTop += scrollDelta;
             });
         }
     });
     
     
-        // Load history on startup
-        loadChatHistory(0, false).then(() => {
-            setTimeout(() => {
-                chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'instant' });
-            }, 100);
-        });
         
         
         fetchMessageUsage();
