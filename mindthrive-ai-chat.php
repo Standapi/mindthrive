@@ -243,9 +243,6 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
     curl_exec($ch);
                 // Once full message received, increment usage
                 MindThrive_UsageTracker::increment_usage($user_id);
-
-
-                update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
     
                 return strlen($data);
     if (curl_errno($ch)) {

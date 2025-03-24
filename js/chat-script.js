@@ -1,5 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
     let messageLimit = { used: 0, max: 0 };
+    let loadedMessageCount = 0;
+    let allMessagesLoaded = false;
+
 
     function updateUsageUI() {
         const counter = document.getElementById("usage-counter");
@@ -69,36 +72,58 @@ document.addEventListener("DOMContentLoaded", function() {
     /**
      * Fetch chat history from the server and display it.
      */
-    function loadChatHistory() {
-        fetchMessageUsage();
+    function loadChatHistory(offset = 0, prepend = false) {
         fetch(mindthriveChat.ajaxurl, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
                 action: "fetch_chat_history",
-                security: mindthriveChat.security
+                security: mindthriveChat.security,
+                offset: offset
             })
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success && data.data.history) {
+            if (data.success && Array.isArray(data.data.history)) {
+                if (data.data.history.length < 20) {
+                    allMessagesLoaded = true;
+                }
+    
+                const fragment = document.createDocumentFragment();
+    
                 data.data.history.forEach(msg => {
-                    appendMessage(msg.message_text, 'user');
-                    appendMessage(marked.parse(msg.ai_response), 'ai');
-
+                    const user = document.createElement("div");
+                    user.classList.add("message", "user-message");
+                    user.innerHTML = `<div class="message-text">${msg.message_text}</div>`;
+                    fragment.appendChild(user);
+    
+                    const ai = document.createElement("div");
+                    ai.classList.add("message", "ai-message");
+                    ai.innerHTML = `<div class="message-text">${marked.parse(msg.ai_response)}</div>`;
+                    fragment.appendChild(ai);
                 });
-            } else {
-                console.error("Could not load chat history:", data);
+    
+                if (prepend) {
+                    chatWindow.prepend(fragment);
+                } else {
+                    chatWindow.appendChild(fragment);
+                }
+    
+                loadedMessageCount += data.data.history.length;
             }
-        })
-        .catch(error => {
-            console.error("Error fetching chat history:", error);
         });
     }
+    
 
-    // Load history on startup
-    loadChatHistory();
 
+    chatWindow.addEventListener('scroll', () => {
+        if (chatWindow.scrollTop < 50 && !allMessagesLoaded) {
+            loadChatHistory(loadedMessageCount, true);
+        }
+    });
+    
+        // Load history on startup
+        loadChatHistory(0, false);
 
     function typeTextAsHTML(element, html, delay = 30) {
         const tempDiv = document.createElement('div');
