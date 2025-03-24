@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function() {
      * Fetch chat history from the server and display it.
      */
     function loadChatHistory(offset = 0, prepend = false) {
-        fetch(mindthriveChat.ajaxurl, {
+        return fetch(mindthriveChat.ajaxurl, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
@@ -114,16 +114,27 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
     
+    
 
 
     chatWindow.addEventListener('scroll', () => {
-        if (chatWindow.scrollTop < 50 && !allMessagesLoaded) {
-            loadChatHistory(loadedMessageCount, true);
+        if (chatWindow.scrollTop < 50 && !allMessagesLoaded && !isLoadingHistory) {
+            isLoadingHistory = true;
+            loadChatHistory(loadedMessageCount, true).then(() => {
+                isLoadingHistory = false;
+            });
         }
     });
     
+    
         // Load history on startup
-        loadChatHistory(0, false);
+        loadChatHistory(0, false).then(() => {
+            setTimeout(() => {
+                chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'instant' });
+            }, 100);
+        });
+        
+        
         fetchMessageUsage();
 
 
