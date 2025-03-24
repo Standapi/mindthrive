@@ -10,6 +10,8 @@ function mindthrive_handle_chat() {
     check_ajax_referer('mindthrive-chat-nonce', 'security');
     mindthrive_verify_request();
 
+require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
+$payload = MindThrive_OpenAI_Service::build_payload($user_id, $message);
     $user_id = get_current_user_id();
     $message = isset($_POST['message']) ? sanitize_text_field($_POST['message']) : '';
     $date    = date('Y-m-d');
