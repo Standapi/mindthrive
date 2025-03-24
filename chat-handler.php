@@ -10,24 +10,23 @@ function mindthrive_handle_chat() {
     check_ajax_referer('mindthrive-chat-nonce', 'security');
     mindthrive_verify_request();
 
-require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
-$payload = MindThrive_OpenAI_Service::build_payload($user_id, $message);
     $user_id = get_current_user_id();
     $message = isset($_POST['message']) ? sanitize_text_field($_POST['message']) : '';
-    $date    = date('Y-m-d');
+    $today   = date('Y-m-d');
+
+    require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
+    $payload = MindThrive_OpenAI_Service::build_payload($user_id, $message);
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
 
-    // Daily limit logic
-    $today = date('Y-m-d');
+    // Load current usage
+    $usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
+    if (!is_array($usage) || $usage['date'] !== $today) {
+        $usage = ['date' => $today, 'count' => 0];
+    }
 
-// Load current usage
-$usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
-if (!is_array($usage) || $usage['date'] !== $today) {
-    $usage = ['date' => $today, 'count' => 0];
-}
-
-$message_count = $usage['count']; // Don't increment yet
+    $message_count = $usage['count']; // Don't increment yet
 
 
     
@@ -49,8 +48,6 @@ $message_count = $usage['count']; // Don't increment yet
     }
     
 
-    // Build OpenAI request
-    $payload = mindthrive_build_openai_payload($user_id, $message);
 
     $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
         'headers' => [
