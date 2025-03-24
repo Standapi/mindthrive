@@ -41,7 +41,7 @@ function mindthrive_build_openai_payload($user_id, $message, $include_history = 
 
     if ($include_history) {
         $history = $wpdb->get_results($wpdb->prepare(
-            "SELECT message_text, ai_response FROM {$table_name} WHERE user_id = %d ORDER BY created_at DESC LIMIT 20",
+            "SELECT message_text, ai_response FROM {$table_name} WHERE user_id = %d ORDER BY created_at DESC LIMIT 30",
             $user_id
         ));
 
@@ -146,12 +146,14 @@ function fetch_chat_history() {
     $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
 
     $history = $wpdb->get_results($wpdb->prepare(
-        "SELECT message_text, ai_response FROM {$table_name} WHERE user_id = %d ORDER BY created_at ASC LIMIT 20",
+        "SELECT message_text, ai_response FROM {$table_name} WHERE user_id = %d ORDER BY created_at DESC LIMIT 20",
         $user_id
     ));
 
+    $history = array_reverse($history); // Show newest last
     wp_send_json_success(['history' => $history]);
 }
+
 
 
 add_action('wp_ajax_fetch_chat_history', 'fetch_chat_history');
