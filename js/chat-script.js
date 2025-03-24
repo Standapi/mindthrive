@@ -35,17 +35,18 @@ document.addEventListener("DOMContentLoaded", function () {
     // ---------------------------
     function updateUsageUI() {
         const counter = document.getElementById("usage-counter");
-        if (!counter) return;
 
-        const { used, max } = messageLimit;
-        const percent = used / max;
+            counter.style.opacity = 1;
+            counter.style.transform = "translateY(0)";
 
-        counter.textContent = `${used} / ${max} messages used today`;
+            // Auto-hide after 5 seconds
+            clearTimeout(counter._hideTimeout);
+            counter._hideTimeout = setTimeout(() => {
+                counter.style.opacity = 0;
+                counter.style.transform = "translateY(-10px)";
+            }, 5000);
 
-        counter.classList.remove("low", "medium", "high");
-        if (percent < 0.5) counter.classList.add("low");
-        else if (percent < 1) counter.classList.add("medium");
-        else counter.classList.add("high");
+        
     }
 
     function fetchMessageUsage() {
@@ -114,15 +115,37 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Initial load
-    loadChatHistory(0, false).then(() => {
-        // Double requestAnimationFrame ensures layout is flushed
-        requestAnimationFrame(() => {
+    fetch(mindthriveChat.ajaxurl, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+            action: "fetch_chat_history",
+            security: mindthriveChat.security,
+            offset: 0
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success || !Array.isArray(data.data.history)) return;
+    
+        const total = data.data.total || 0;
+        const latestPageOffset = Math.max(0, total - 20);
+    
+        // Now load the last page
+        loadChatHistory(latestPageOffset, false).then(() => {
             requestAnimationFrame(() => {
-                chatWindow.scrollTop = chatWindow.scrollHeight;
+                const lastMessage = chatWindow.lastElementChild;
+                if (lastMessage) {
+                    lastMessage.scrollIntoView({ behavior: 'instant' });
+                } else {
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
                 firstLoadDone = true;
             });
         });
+        
     });
+    
     
     
 

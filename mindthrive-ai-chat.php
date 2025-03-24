@@ -109,7 +109,16 @@ function fetch_chat_history() {
 
     $history = MindThrive_ChatLogger::get_history($user_id, 20, $offset);
 
-    wp_send_json_success(['history' => $history]);
+        global $wpdb;
+    $total = $wpdb->get_var(
+        $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}mindthrive_chat_logs WHERE user_id = %d", $user_id)
+    );
+
+    wp_send_json_success([
+        'history' => $history,
+        'total' => (int) $total
+    ]);
+
 }
 
 

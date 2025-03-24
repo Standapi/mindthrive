@@ -1,4 +1,8 @@
 <div class="chat-container">
+        <!-- Toast-style usage banner -->
+        <div id="usage-counter" class="usage-toast">
+        Loading usage...
+    </div>
     <div class="chat-box">
         <!-- Chat Header -->
         <div class="chat-header">
@@ -25,15 +29,13 @@
         </div>
     </div>
     
-        <div id="chat-loading-indicator" class="chat-loading-indicator hidden">
-        Loading older messages...
-    </div>
-        <!-- Chat Window -->
-        <div class="chat-window" id="chat-window">
 
-    <div id="usage-counter" class="usage-banner">
-    Loading usage...
-    </div>
+
+<!-- Chat messages -->
+<div class="chat-window" id="chat-window">
+    <!-- messages go here -->
+
+
 
     <!-- Initial AI Message SHOULD be here -->
     <div class="message ai-message">
