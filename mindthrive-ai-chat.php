@@ -262,7 +262,8 @@ if ($usage['count'] >= $max_messages) {
         'created_at'   => current_time('mysql')
     ]);
     $log_id = $wpdb->insert_id;
-
+require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
+    $payload = MindThrive_OpenAI_Service::build_payload($user_id, $message);
     // ✅ Step 4: Prepare GPT streaming request
     $payload = mindthrive_build_openai_payload($user_id, $message);
     $payload['stream'] = true;
