@@ -17,38 +17,14 @@ function mindthrive_handle_chat() {
     require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
     $payload = MindThrive_OpenAI_Service::build_payload($user_id, $message);
 
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
+    require_once plugin_dir_path(__FILE__) . 'includes/class-usage-tracker.php';
 
-    // Load current usage
-    $usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
-    if (!is_array($usage) || $usage['date'] !== $today) {
-        $usage = ['date' => $today, 'count' => 0];
-    }
-
-    $message_count = $usage['count']; // Don't increment yet
-
-
-    
-
-    if (current_user_can('administrator')) {
-        $max_messages = PHP_INT_MAX;
-    } elseif (current_user_can('heal_user')) {
-        $max_messages = 9999;
-    } elseif (current_user_can('empower_user')) {
-        $max_messages = 50;
-    } elseif (current_user_can('support_user')) {
-        $max_messages = 20;
-    } else {
-        $max_messages = 5;
-    }
-
-    if ($message_count >= $max_messages) {
-        wp_send_json_error(['message' => 'You have reached your daily message limit. Please upgrade your plan or contact support.']);
+    if (MindThrive_UsageTracker::is_over_limit($user_id)) {
+        wp_send_json_error(['message' => 'You have reached your daily message limit.']);
     }
     
 
-
+    // Send to OpenAI
     $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
         'headers' => [
             'Authorization' => 'Bearer ' . trim(MINDTHRIVE_OPENAI_API_KEY),
@@ -72,21 +48,17 @@ function mindthrive_handle_chat() {
     $ai_reply_raw = $response_body['choices'][0]['message']['content'];
     $ai_reply = wp_kses_post($ai_reply_raw);
 
-    $wpdb->insert($table_name, [
-        'user_id'      => $user_id,
-        'message_text' => $message,
-        'ai_response'  => $ai_reply,
-        'created_at'   => current_time('mysql')
-    ]);
+    require_once plugin_dir_path(__FILE__) . 'includes/class-chat-logger.php';
+    MindThrive_ChatLogger::log_full_message($user_id, $message, $ai_reply);
 
-    // Increment and save usage count
+    // Update usage
     $usage['count']++;
-    update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
-    
+    MindThrive_UsageTracker::increment_usage($user_id);
 
 
     wp_send_json_success(['message' => $ai_reply]);
 }
+
 
 
 add_action('wp_ajax_mindthrive_chat', 'mindthrive_handle_chat');

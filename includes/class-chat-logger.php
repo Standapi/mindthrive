@@ -3,6 +3,19 @@ if (!defined('ABSPATH')) exit;
 
 class MindThrive_ChatLogger {
 
+    public static function log_full_message($user_id, $message, $ai_response) {
+        global $wpdb;
+        $table = self::get_table_name();
+    
+        return $wpdb->insert($table, [
+            'user_id'      => $user_id,
+            'message_text' => $message,
+            'ai_response'  => $ai_response,
+            'created_at'   => current_time('mysql')
+        ]);
+    }
+    
+
     public static function get_table_name() {
         global $wpdb;
         return $wpdb->prefix . 'mindthrive_chat_logs';
