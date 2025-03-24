@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let loadedMessageCount = 0;
     let allMessagesLoaded = false;
     let isLoadingHistory = false;
+    let firstLoadDone = false;
+
 
     // ---------------------------
     // Usage UI
@@ -100,12 +102,14 @@ document.addEventListener("DOMContentLoaded", function () {
     loadChatHistory(0, false).then(() => {
         requestAnimationFrame(() => {
             chatWindow.scrollTop = chatWindow.scrollHeight;
+            firstLoadDone = true;
         });
     });
+    
 
     // Scroll pagination
     chatWindow.addEventListener("scroll", () => {
-        if (chatWindow.scrollTop < 50 && !allMessagesLoaded && !isLoadingHistory) {
+        if (firstLoadDone && chatWindow.scrollTop < 50 && !allMessagesLoaded && !isLoadingHistory) {
             isLoadingHistory = true;
             loadingIndicator.classList.remove("hidden");
 
