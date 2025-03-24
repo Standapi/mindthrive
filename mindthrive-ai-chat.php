@@ -213,13 +213,9 @@ if ($usage['count'] >= $max_messages) {
 
 
     // ✅ Step 3: Insert initial user message to DB
-    $wpdb->insert($table_name, [
-        'user_id'      => $user_id,
-        'message_text' => $message,
-        'ai_response'  => '',
-        'created_at'   => current_time('mysql')
-    ]);
-    $log_id = $wpdb->insert_id;
+    require_once plugin_dir_path(__FILE__) . 'includes/class-chat-logger.php';
+$log_id = MindThrive_ChatLogger::log_user_message($user_id, $message);
+
 require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
     $payload = MindThrive_OpenAI_Service::build_payload($user_id, $message);
     // ✅ Step 4: Prepare GPT streaming request
@@ -252,11 +248,8 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
                         
 
                         // ✅ Update DB response incrementally
-                        $wpdb->query($wpdb->prepare(
-                            "UPDATE {$table_name} SET ai_response = CONCAT(ai_response, %s) WHERE id = %d",
-                            $content,
-                            $log_id
-                        ));
+                        MindThrive_ChatLogger::update_ai_response($log_id, $content);
+
                     }
                 }
             }
@@ -292,11 +285,21 @@ add_action('wp_ajax_nopriv_mindthrive_chat_stream', 'mindthrive_handle_chat_stre
 
 function clear_chat_history() {
     check_ajax_referer('mindthrive-chat-nonce', 'security');
-    if (!is_user_logged_in()) wp_send_json_error(['message' => 'Not authorized.']);
 
-    global $wpdb;
-    $wpdb->delete($wpdb->prefix . 'mindthrive_chat_logs', ['user_id' => get_current_user_id()]);
-    
-    wp_send_json_success();
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Not authorized.']);
+    }
+
+    require_once plugin_dir_path(__FILE__) . 'includes/class-chat-logger.php';
+
+    $user_id = get_current_user_id();
+    $result = MindThrive_ChatLogger::clear_history($user_id);
+
+    if ($result !== false) {
+        wp_send_json_success();
+    } else {
+        wp_send_json_error(['message' => 'Failed to clear chat history.']);
+    }
 }
+
 add_action('wp_ajax_clear_chat_history', 'clear_chat_history');
