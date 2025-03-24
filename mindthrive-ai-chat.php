@@ -102,18 +102,16 @@ function fetch_chat_history() {
         wp_send_json_error(['message' => 'Please log in.']);
     }
 
-    global $wpdb;
+    require_once plugin_dir_path(__FILE__) . 'includes/class-chat-logger.php';
+
     $user_id = get_current_user_id();
-    $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
+    $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
 
-    $history = $wpdb->get_results($wpdb->prepare(
-        "SELECT message_text, ai_response FROM {$table_name} WHERE user_id = %d ORDER BY created_at DESC LIMIT 20",
-        $user_id
-    ));
+    $history = MindThrive_ChatLogger::get_history($user_id, 20, $offset);
 
-    $history = array_reverse($history); // Show newest last
     wp_send_json_success(['history' => $history]);
 }
+
 
 
 
