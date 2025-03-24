@@ -14,6 +14,21 @@ document.addEventListener("DOMContentLoaded", function () {
     let isLoadingHistory = false;
     let firstLoadDone = false;
 
+    function appendMessage(text, sender) {
+        if (!chatWindow) return;
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", sender === "user" ? "user-message" : "ai-message");
+    
+        const textSpan = document.createElement("div");
+        textSpan.classList.add("message-text");
+        textSpan.innerHTML = text;
+    
+        messageDiv.appendChild(textSpan);
+        chatWindow.appendChild(messageDiv);
+        messageDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+
 
     // ---------------------------
     // Usage UI
@@ -100,11 +115,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Initial load
     loadChatHistory(0, false).then(() => {
+        // Double requestAnimationFrame ensures layout is flushed
         requestAnimationFrame(() => {
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            firstLoadDone = true;
+            requestAnimationFrame(() => {
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                firstLoadDone = true;
+            });
         });
     });
+    
     
 
     // Scroll pagination
