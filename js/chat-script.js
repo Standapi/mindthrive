@@ -1,33 +1,36 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
+    const chatWindow = document.getElementById("chat-window");
     const loadingIndicator = document.getElementById("chat-loading-indicator");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+    const menuBtn = document.getElementById("menu-toggle");
+    const settingsToggle = document.getElementById("settings-toggle");
+    const settingsMenu = document.getElementById("settings-menu");
+    const typingIndicator = document.getElementById("typing-indicator");
 
     let messageLimit = { used: 0, max: 0 };
     let loadedMessageCount = 0;
     let allMessagesLoaded = false;
     let isLoadingHistory = false;
 
-
-
+    // ---------------------------
+    // Usage UI
+    // ---------------------------
     function updateUsageUI() {
         const counter = document.getElementById("usage-counter");
         if (!counter) return;
-    
+
         const { used, max } = messageLimit;
         const percent = used / max;
-    
+
         counter.textContent = `${used} / ${max} messages used today`;
-    
+
         counter.classList.remove("low", "medium", "high");
-        if (percent < 0.5) {
-            counter.classList.add("low");
-        } else if (percent < 1) {
-            counter.classList.add("medium");
-        } else {
-            counter.classList.add("high");
-        }
+        if (percent < 0.5) counter.classList.add("low");
+        else if (percent < 1) counter.classList.add("medium");
+        else counter.classList.add("high");
     }
-    
-    
+
     function fetchMessageUsage() {
         fetch(mindthriveChat.ajaxurl, {
             method: "POST",
@@ -37,45 +40,18 @@ document.addEventListener("DOMContentLoaded", function() {
                 security: mindthriveChat.security
             })
         })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                messageLimit = data.data;
-                updateUsageUI();
-            }
-        });
-    }
-    
-
-
-    const chatWindow = document.getElementById("chat-window");
-    const userInput  = document.getElementById("user-input");
-    const sendBtn    = document.getElementById("send-btn");
-    const menuBtn    = document.getElementById("menu-toggle");
-    const settingsToggle = document.getElementById('settings-toggle');
-    const settingsMenu = document.getElementById('settings-menu');
-    const typingIndicator = document.getElementById('typing-indicator');
-
-    /**
-     * Appends a text bubble to the chat window.
-     */
-    function appendMessage(text, sender) {
-        if (!chatWindow) return;
-        const messageDiv = document.createElement("div");
-        messageDiv.classList.add("message", sender === "user" ? "user-message" : "ai-message");
-
-        const textSpan = document.createElement("div");
-        textSpan.classList.add("message-text");
-        textSpan.innerHTML = text;
-
-        messageDiv.appendChild(textSpan);
-        chatWindow.appendChild(messageDiv);
-        messageDiv.scrollIntoView({ behavior: 'smooth' });
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    messageLimit = data.data;
+                    updateUsageUI();
+                }
+            });
     }
 
-    /**
-     * Fetch chat history from the server and display it.
-     */
+    // ---------------------------
+    // Load History
+    // ---------------------------
     function loadChatHistory(offset = 0, prepend = false) {
         return fetch(mindthriveChat.ajaxurl, {
             method: "POST",
@@ -86,24 +62,22 @@ document.addEventListener("DOMContentLoaded", function() {
                 offset: offset
             })
         })
-        .then(response => response.json())
-        
-        .then(data => {
-            if (data.success && Array.isArray(data.data.history)) {
-                if (data.data.history.length < 20) {
-                    allMessagesLoaded = true;
-                }
-    
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success || !Array.isArray(data.data.history)) return;
+
+                const history = data.data.history;
+                if (history.length < 20) allMessagesLoaded = true;
+
                 const fragment = document.createDocumentFragment();
-    
-                data.data.history.forEach(msg => {
+
+                history.forEach(msg => {
                     if (msg.message_text) {
                         const user = document.createElement("div");
                         user.classList.add("message", "user-message");
                         user.innerHTML = `<div class="message-text">${msg.message_text}</div>`;
                         fragment.appendChild(user);
                     }
-                
                     if (msg.ai_response) {
                         const ai = document.createElement("div");
                         ai.classList.add("message", "ai-message");
@@ -111,114 +85,57 @@ document.addEventListener("DOMContentLoaded", function() {
                         fragment.appendChild(ai);
                     }
                 });
-                
-    
+
                 if (prepend) {
                     chatWindow.prepend(fragment);
                 } else {
                     chatWindow.appendChild(fragment);
                 }
-    
-                if (data.success && Array.isArray(data.data.history)) {
-                    const newMessages = data.data.history.length;
-                    loadedMessageCount += data.data.history.length;
 
-                }
-                
-
-            }
-        });
+                loadedMessageCount += history.length;
+            });
     }
-    
-    
 
+    // Initial load
+    loadChatHistory(0, false).then(() => {
+        requestAnimationFrame(() => {
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        });
+    });
 
-    chatWindow.addEventListener('scroll', () => {
+    // Scroll pagination
+    chatWindow.addEventListener("scroll", () => {
         if (chatWindow.scrollTop < 50 && !allMessagesLoaded && !isLoadingHistory) {
             isLoadingHistory = true;
             loadingIndicator.classList.remove("hidden");
-    
-            const previousScrollHeight = chatWindow.scrollHeight;
-    
+
+            const prevHeight = chatWindow.scrollHeight;
+
             loadChatHistory(loadedMessageCount, true).then(() => {
                 isLoadingHistory = false;
                 loadingIndicator.classList.add("hidden");
-    
-                const newScrollHeight = chatWindow.scrollHeight;
-                const scrollDelta = newScrollHeight - previousScrollHeight;
-    
-                // ✅ Scroll pinning: preserve scroll position after prepend
-                chatWindow.scrollTop += scrollDelta;
+
+                const newHeight = chatWindow.scrollHeight;
+                chatWindow.scrollTop += (newHeight - prevHeight);
             });
         }
     });
-    
-    
-        
-        
-        fetchMessageUsage();
 
-
-    function typeTextAsHTML(element, html, delay = 30) {
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        const nodes = Array.from(tempDiv.childNodes);
-    
-        function renderNode(index = 0) {
-            if (index >= nodes.length) return;
-    
-            const node = nodes[index];
-            const clone = node.cloneNode(true);
-    
-            if (clone.nodeType === Node.TEXT_NODE) {
-                let i = 0;
-                const fullText = clone.textContent;
-                const span = document.createElement('span');
-                element.appendChild(span);
-    
-                function typeChar() {
-                    if (i < fullText.length) {
-                        span.textContent += fullText.charAt(i);
-                        span.scrollIntoView({ behavior: 'auto' });
-                        i++;
-                        setTimeout(typeChar, delay);
-                    } else {
-                        renderNode(index + 1);
-                    }
-                }
-    
-                typeChar();
-            } else {
-                element.appendChild(clone);
-                renderNode(index + 1);
-            }
-        }
-    
-        renderNode();
-    }
-    
-    
-
-    /**
-     * Sends the user's message to the server via AJAX and handles the streaming response.
-     */
+    // ---------------------------
+    // Send Message
+    // ---------------------------
     function sendMessage() {
         if (messageLimit.used >= messageLimit.max) {
-            alert("You've reached your daily message limit. Upgrade your plan for more support.");
+            alert("You've reached your daily message limit.");
             return;
         }
-        messageLimit.used += 1;
-        updateUsageUI();      
-        
-        
+        messageLimit.used++;
+        updateUsageUI();
+
         const message = userInput.value.trim();
         if (!message) return;
 
         appendMessage(message, "user");
-        requestAnimationFrame(() => {
-            chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
-          });
-        
         userInput.value = "";
         sendBtn.disabled = true;
 
@@ -229,118 +146,101 @@ document.addEventListener("DOMContentLoaded", function() {
         aiMessageDiv.appendChild(textSpan);
         chatWindow.appendChild(aiMessageDiv);
 
-        typingIndicator.style.display = 'block';
+        typingIndicator.style.display = "block";
 
         const eventSource = new EventSource(`${mindthriveChat.ajaxurl}?action=mindthrive_chat_stream&message=${encodeURIComponent(message)}&security=${mindthriveChat.security}`);
-
         let markdownBuffer = '';
 
-
-
         eventSource.onmessage = (e) => {
-        if (e.data === '[DONE]') {
-            typingIndicator.style.display = 'none';
-            eventSource.close();
-            sendBtn.disabled = false;
+            if (e.data === '[DONE]') {
+                typingIndicator.style.display = 'none';
+                eventSource.close();
+                sendBtn.disabled = false;
 
-            // ✅ Parse and format the full markdown response
-            const formattedHTML = marked.parse(markdownBuffer);
-
-            // Replace the streamed text with formatted HTML
-            textSpan.innerHTML = formattedHTML;
-            aiMessageDiv.scrollIntoView({ behavior: 'smooth' });
-
-            markdownBuffer = '';
-            return;
-        }
-
-        try {
-            const json = JSON.parse(e.data);
-            if (json.content) {
-            markdownBuffer += json.content;
-
-            // ✅ Stream text as plain text (typing effect)
-            textSpan.textContent += json.content;
-            textSpan.scrollIntoView({ behavior: 'auto' });
+                textSpan.innerHTML = marked.parse(markdownBuffer);
+                aiMessageDiv.scrollIntoView({ behavior: 'smooth' });
+                markdownBuffer = '';
+                return;
             }
-        } catch (err) {
-            console.error("JSON parse error:", err, e.data);
-        }
+
+            try {
+                const json = JSON.parse(e.data);
+                if (json.content) {
+                    markdownBuffer += json.content;
+                    textSpan.textContent += json.content;
+                    textSpan.scrollIntoView({ behavior: 'auto' });
+                }
+            } catch (err) {
+                console.error("Streaming error:", err, e.data);
+            }
         };
-
-
 
         eventSource.onerror = (err) => {
             console.error("Streaming error:", err);
             eventSource.close();
             sendBtn.disabled = false;
-            typingIndicator.style.display = 'none';
+            typingIndicator.style.display = "none";
             appendMessage("An error occurred during streaming.", "ai");
         };
     }
 
-    // Click event on Send button
+    // ---------------------------
+    // UI Events
+    // ---------------------------
     sendBtn.addEventListener("click", sendMessage);
-
-    // Press Enter to send message
-    userInput.addEventListener("keypress", function(event) {
+    userInput.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
             event.preventDefault();
             sendMessage();
         }
     });
 
-    // Menu button logic
-    if (menuBtn) {
-        menuBtn.addEventListener("click", function() {
-            if (window.innerWidth < 768) {
-                if (
-                    typeof elementorProFrontend !== "undefined" &&
-                    elementorProFrontend.modules &&
-                    elementorProFrontend.modules.popup
-                ) {
-                    elementorProFrontend.modules.popup.showPopup({ id: 55 });
-                } else {
-                    console.error("Elementor Pro popup is not available.");
-                }
-            } else {
-                window.location.href = "/menu";
-            }
-        });
-    }
-
-    // Settings menu toggle
-    settingsToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        settingsMenu.classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', (event) => {
-        if (!settingsMenu.contains(event.target) && event.target !== settingsToggle) {
-            settingsMenu.classList.add('hidden');
+    menuBtn?.addEventListener("click", () => {
+        if (window.innerWidth < 768 && typeof elementorProFrontend !== "undefined") {
+            elementorProFrontend.modules?.popup?.showPopup({ id: 55 });
+        } else {
+            window.location.href = "/menu";
         }
     });
 
-    // Clear Chat functionality (exactly once!)
-    document.getElementById('clear-chat-btn').addEventListener('click', () => {
+    settingsToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        settingsMenu.classList.toggle("hidden");
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!settingsMenu.contains(event.target) && event.target !== settingsToggle) {
+            settingsMenu.classList.add("hidden");
+        }
+    });
+
+    // Clear chat
+    document.getElementById("clear-chat-btn").addEventListener("click", () => {
         if (confirm("Are you sure you want to clear the chat history?")) {
             fetch(mindthriveChat.ajaxurl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: new URLSearchParams({
-                    action: 'clear_chat_history',
+                    action: "clear_chat_history",
                     security: mindthriveChat.security
                 })
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) chatWindow.innerHTML = '';
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        chatWindow.innerHTML = "";
+                        loadedMessageCount = 0;
+                        allMessagesLoaded = false;
+                        loadChatHistory(0, false);
+                    }
+                });
         }
     });
+
+    fetchMessageUsage();
 });
 
-// Font resizing (global scope)
+// Font resizing
 function resizeFont(sizeChange) {
     document.querySelectorAll('.message-text').forEach(msg => {
         let currentSize = parseFloat(window.getComputedStyle(msg).fontSize);
