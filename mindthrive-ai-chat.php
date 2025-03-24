@@ -185,12 +185,29 @@ function mindthrive_handle_chat_stream() {
     $today = date('Y-m-d');
 $usage = get_user_meta($user_id, 'mindthrive_daily_usage', true);
 
-require_once plugin_dir_path(__FILE__) . 'includes/class-usage-tracker.php';
-
-if (MindThrive_UsageTracker::is_over_limit($user_id)) {
-    wp_send_json_error(['message' => 'You have reached your daily message limit.']);
+// Properly reset usage ONLY if needed
+if (!is_array($usage) || !isset($usage['date']) || $usage['date'] !== $today) {
+    $usage = ['date' => $today, 'count' => 0];
 }
 
+// Set the limit based on role
+if (current_user_can('administrator')) {
+    $max_messages = PHP_INT_MAX;
+} elseif (current_user_can('heal_user')) {
+    $max_messages = 9999;
+} elseif (current_user_can('empower_user')) {
+    $max_messages = 50;
+} elseif (current_user_can('support_user')) {
+    $max_messages = 20;
+} else {
+    $max_messages = 5;
+}
+
+// Check message count BEFORE continuing
+if ($usage['count'] >= $max_messages) {
+    echo "data: " . json_encode(['error' => 'You have reached your daily message limit.']) . "\n\n";
+    ob_flush(); flush();
+    exit;
 }
 
 
@@ -247,8 +264,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
                 $usage['count']++;
                 error_log("Updating usage: " . print_r($usage, true));
 
-                MindThrive_UsageTracker::increment_usage($user_id);
-
+                update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
     
                 return strlen($data);
     if (curl_errno($ch)) {
