@@ -145,10 +145,8 @@ function mindthrive_get_message_usage() {
     }
 
     wp_send_json_success([
-        'used' => $message_count,
-        'max'  => $max
-    ]);
-}
+require_once plugin_dir_path(__FILE__) . 'includes/class-chat-logger.php';
+$history = MindThrive_ChatLogger::get_history($user_id, 20);
 
 
 add_action('wp_ajax_get_message_usage', 'mindthrive_get_message_usage');
