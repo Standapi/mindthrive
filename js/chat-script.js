@@ -124,6 +124,8 @@ document.addEventListener("DOMContentLoaded", function() {
     
         // Load history on startup
         loadChatHistory(0, false);
+        fetchMessageUsage();
+
 
     function typeTextAsHTML(element, html, delay = 30) {
         const tempDiv = document.createElement('div');
