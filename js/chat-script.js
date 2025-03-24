@@ -35,19 +35,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // ---------------------------
     function updateUsageUI() {
         const counter = document.getElementById("usage-counter");
-
-            counter.style.opacity = 1;
-            counter.style.transform = "translateY(0)";
-
-            // Auto-hide after 5 seconds
-            clearTimeout(counter._hideTimeout);
-            counter._hideTimeout = setTimeout(() => {
-                counter.style.opacity = 0;
-                counter.style.transform = "translateY(-10px)";
-            }, 5000);
-
-        
-    }
+        counter.classList.remove("limit-reached");
+      
+        if (messageLimit.used >= messageLimit.max) {
+          counter.classList.add("limit-reached");
+          counter.innerHTML = `You’ve reached your daily limit. <a href="/upgrade" style="color: #5A30B5; text-decoration: underline;">Upgrade</a> to continue.`;
+        } else {
+          counter.innerHTML = `Messages used: <strong>${messageLimit.used}</strong> / ${messageLimit.max}`;
+        }
+      }
 
     function fetchMessageUsage() {
         fetch(mindthriveChat.ajaxurl, {
@@ -172,9 +168,16 @@ document.addEventListener("DOMContentLoaded", function () {
     // ---------------------------
     function sendMessage() {
         if (messageLimit.used >= messageLimit.max) {
-            alert("You've reached your daily message limit.");
+            const upgradePrompt = document.createElement("div");
+            upgradePrompt.className = "usage-toast";
+            upgradePrompt.innerHTML = `
+                You've reached your daily message limit. 
+                <a href="/upgrade" style="text-decoration: underline; font-weight: bold;">Upgrade your plan</a> to continue.
+            `;
+            document.body.appendChild(upgradePrompt);
             return;
         }
+        
         messageLimit.used++;
         updateUsageUI();
 
