@@ -92,16 +92,21 @@ document.addEventListener("DOMContentLoaded", function() {
                 const fragment = document.createDocumentFragment();
     
                 data.data.history.forEach(msg => {
-                    const user = document.createElement("div");
-                    user.classList.add("message", "user-message");
-                    user.innerHTML = `<div class="message-text">${msg.message_text}</div>`;
-                    fragment.appendChild(user);
-    
-                    const ai = document.createElement("div");
-                    ai.classList.add("message", "ai-message");
-                    ai.innerHTML = `<div class="message-text">${marked.parse(msg.ai_response)}</div>`;
-                    fragment.appendChild(ai);
+                    if (msg.message_text) {
+                        const user = document.createElement("div");
+                        user.classList.add("message", "user-message");
+                        user.innerHTML = `<div class="message-text">${msg.message_text}</div>`;
+                        fragment.appendChild(user);
+                    }
+                
+                    if (msg.ai_response) {
+                        const ai = document.createElement("div");
+                        ai.classList.add("message", "ai-message");
+                        ai.innerHTML = `<div class="message-text">${marked.parse(msg.ai_response)}</div>`;
+                        fragment.appendChild(ai);
+                    }
                 });
+                
     
                 if (prepend) {
                     chatWindow.prepend(fragment);
@@ -109,7 +114,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     chatWindow.appendChild(fragment);
                 }
     
-                loadedMessageCount += data.data.history.length;
+                if (data.success && Array.isArray(data.data.history)) {
+                    const newMessages = data.data.history.length;
+                    loadedMessageCount = offset + newMessages;
+                }
+                
+
             }
         });
     }
