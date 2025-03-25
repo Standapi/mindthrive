@@ -45,10 +45,14 @@ class MindThrive_UsageTracker
         update_user_meta($user_id, 'mindthrive_daily_usage', $usage);
     }
 
-    public static function is_over_limit($user_id)
-    {
+    public static function is_over_limit($user_id) {
+        if (user_can($user_id, 'heal_user')) {
+            return false; // Unlimited plan
+        }
+    
         $usage = self::get_today_usage($user_id);
         $limit = self::get_limit($user_id);
         return $usage['count'] >= $limit;
     }
+    
 }

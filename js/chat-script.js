@@ -38,6 +38,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const counter = document.getElementById("usage-counter");
     counter.classList.remove("limit-reached");
   
+    if (messageLimit.unlimited) {
+      counter.innerHTML = `💜 Unlimited messages with the Heal Plan`;
+      return;
+    }
+  
     if (messageLimit.used >= messageLimit.max) {
       counter.classList.add("limit-reached");
       counter.innerHTML = `
@@ -48,6 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
       counter.innerHTML = `Messages used: <strong>${messageLimit.used}</strong> / ${messageLimit.max}`;
     }
   }
+  
   
 
   function fetchMessageUsage() {
@@ -203,8 +209,11 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    messageLimit.used++;
-    updateUsageUI();
+    if (!messageLimit.unlimited) {
+      messageLimit.used++;
+      updateUsageUI();
+    }
+    
 
     const message = userInput.value.trim();
     if (!message) return;
