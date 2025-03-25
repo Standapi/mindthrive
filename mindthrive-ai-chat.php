@@ -159,8 +159,10 @@ function mindthrive_get_message_usage()
 
     wp_send_json_success([
         'used' => $message_count,
-        'max' => $max
+        'max'  => $max,
+        'role' => MindThrive_UsageTracker::get_role_slug($user_id)
     ]);
+    
 }
 
 add_action('wp_ajax_get_message_usage', 'mindthrive_get_message_usage');

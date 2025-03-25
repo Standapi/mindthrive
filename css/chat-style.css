@@ -412,20 +412,21 @@
 }
 
 .usage-bar {
-	background: linear-gradient(to right, #7B52C2, #5A30B5); /* Mindthrive purple gradient */
-	color: white;
-	font-size: 0.9rem;
+	background: #f4edff;
+	color: #5a30b5;
+	font-size: 0.85rem;
 	text-align: center;
-	padding: 0.5rem 1rem;
-	border-bottom-left-radius: 0.5rem;
-	border-bottom-right-radius: 0.5rem;
-	margin-top: -0.5rem;
-	transition: all 0.3s ease;
+	padding: 0.6rem 1rem;
+	border-top: 1px solid #e0d1f3;
+	border-bottom-left-radius: var(--radius);
+	border-bottom-right-radius: var(--radius);
+	font-weight: 500;
   }
   
   .usage-bar.limit-reached {
-	background: #ffcccc;
-	color: #8a1f1f;
-	font-weight: bold;
+	background: #ffe2e2;
+	color: #b20000;
+	font-weight: 500;
   }
+  
   

@@ -37,14 +37,18 @@ document.addEventListener("DOMContentLoaded", function () {
   function updateUsageUI() {
     const counter = document.getElementById("usage-counter");
     counter.classList.remove("limit-reached");
-
+  
     if (messageLimit.used >= messageLimit.max) {
       counter.classList.add("limit-reached");
-      counter.innerHTML = `You’ve reached your daily limit. <a href="/upgrade" style="color: #5A30B5; text-decoration: underline;">Upgrade</a> to continue.`;
+      counter.innerHTML = `
+        🔒 Message limit reached — 
+        <a href="/upgrade" style="color: inherit; text-decoration: underline; font-weight: 600;">Upgrade to continue</a>
+      `;
     } else {
       counter.innerHTML = `Messages used: <strong>${messageLimit.used}</strong> / ${messageLimit.max}`;
     }
   }
+  
 
   function fetchMessageUsage() {
     fetch(mindthriveChat.ajaxurl, {
@@ -56,10 +60,22 @@ document.addEventListener("DOMContentLoaded", function () {
       }),
     })
       .then((res) => res.json())
-      .then((data) => {
+      .then(data => {
         if (data.success) {
           messageLimit = data.data;
-          updateUsageUI();
+      
+          // Save role
+          const userRole = data.data.role || "";
+      
+          // Update UI with role-specific logic
+          const counter = document.getElementById("usage-counter");
+      
+          if (userRole === "heal_user") {
+            counter.classList.remove("limit-reached");
+            counter.innerHTML = `💜 Unlimited messages with the Heal Plan`;
+          } else {
+            updateUsageUI(); // your usual logic
+          }
         }
       });
   }

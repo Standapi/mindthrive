@@ -46,12 +46,13 @@
             <input type="text" id="user-input" placeholder="Type your message...">
             <button id="send-btn">➤</button>
         </div>
+        <div id="usage-counter" class="usage-bar">
+            Loading usage...
+        </div>
     </div>
 </div>
 <!-- Usage Counter -->
-<div id="usage-counter" class="usage-bar">
-    Loading usage...
-</div>
+
 
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>

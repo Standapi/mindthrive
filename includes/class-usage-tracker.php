@@ -4,6 +4,12 @@ if (!defined('ABSPATH'))
 
 class MindThrive_UsageTracker
 {
+    public static function get_role_slug($user_id)
+    {
+        $user = get_userdata($user_id);
+        return $user->roles[0] ?? 'default';
+    }
+
 
     public static function get_today_usage($user_id)
     {
