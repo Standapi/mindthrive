@@ -60,30 +60,29 @@ document.addEventListener("DOMContentLoaded", function () {
       }),
     })
       .then((res) => res.json())
-      .then(data => {
-        if (data.success) {
-          messageLimit = data.data;
-      
-          // Save role
-          if (!data || !data.data) {
-            console.error("Usage data missing:", data);
-            return;
-          }
-          const userRole = data.data.role || "";
-          
-      
-          // Update UI with role-specific logic
-          const counter = document.getElementById("usage-counter");
-      
-          if (userRole === "heal_user") {
-            counter.classList.remove("limit-reached");
-            counter.innerHTML = `💜 Unlimited messages with the Heal Plan`;
-          } else {
-            updateUsageUI(); // your usual logic
-          }
+      .then((data) => {
+        if (!data || !data.data) {
+          console.error("Missing usage data", data);
+          return;
+        }
+  
+        messageLimit = {
+          used: data.data.used,
+          max: data.data.max,
+          unlimited: data.data.role === "heal_user", // 👈 this is key
+        };
+  
+        const counter = document.getElementById("usage-counter");
+  
+        if (messageLimit.unlimited) {
+          counter.classList.remove("limit-reached");
+          counter.innerHTML = `💜 Unlimited messages with the Heal Plan`;
+        } else {
+          updateUsageUI();
         }
       });
   }
+  
 
   // ---------------------------
   // Load History
@@ -192,7 +191,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Send Message
   // ---------------------------
   function sendMessage() {
-    if (messageLimit.used >= messageLimit.max) {
+    if (!messageLimit.unlimited && messageLimit.used >= messageLimit.max) {
+
       const upgradePrompt = document.createElement("div");
       upgradePrompt.className = "usage-toast";
       upgradePrompt.innerHTML = `
