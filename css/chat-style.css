@@ -430,3 +430,9 @@
   }
   
   
+  .chat-input input:disabled {
+	background-color: #f2f2f2;
+	opacity: 0.6;
+	cursor: not-allowed;
+  }
+  

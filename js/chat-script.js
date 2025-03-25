@@ -13,9 +13,11 @@ document.addEventListener("DOMContentLoaded", function () {
   let allMessagesLoaded = false;
   let isLoadingHistory = false;
   let firstLoadDone = false;
+  let isProcessing = false;
 
   function appendMessage(text, sender) {
     if (!chatWindow) return;
+
     const messageDiv = document.createElement("div");
     messageDiv.classList.add(
       "message",
@@ -28,7 +30,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     messageDiv.appendChild(textSpan);
     chatWindow.appendChild(messageDiv);
-    messageDiv.scrollIntoView({ behavior: "smooth" });
+
+    // ✅ Wait for layout to update, then scroll
+    requestAnimationFrame(() => {
+      messageDiv.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
   }
 
   // ---------------------------
@@ -37,26 +43,37 @@ document.addEventListener("DOMContentLoaded", function () {
   function updateUsageUI() {
     const counter = document.getElementById("usage-counter");
     counter.classList.remove("limit-reached");
-  
+
     if (messageLimit.unlimited) {
       counter.innerHTML = `💜 Unlimited messages with the Heal Plan`;
       return;
     }
-  
+
     if (messageLimit.used >= messageLimit.max) {
       counter.classList.add("limit-reached");
       counter.innerHTML = `
-        🔒 Message limit reached — 
+        🔒 Daily Message limit reached — 
         <a href="/upgrade" style="color: inherit; text-decoration: underline; font-weight: 600;">Upgrade to continue</a>
       `;
     } else {
       counter.innerHTML = `Messages used: <strong>${messageLimit.used}</strong> / ${messageLimit.max}`;
     }
   }
-  
-  
 
   function fetchMessageUsage() {
+
+    if (!messageLimit.unlimited && messageLimit.used >= messageLimit.max) {
+      sendBtn.disabled = true;
+      userInput.disabled = true;
+      userInput.placeholder = "You've reached your daily message limit";
+    
+      const resetAt = data.data.reset_at;
+      startCountdown(resetAt); // ⏳ Start timer
+    
+      return;
+    }
+    
+    
     fetch(mindthriveChat.ajaxurl, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -71,15 +88,15 @@ document.addEventListener("DOMContentLoaded", function () {
           console.error("Missing usage data", data);
           return;
         }
-  
+
         messageLimit = {
           used: data.data.used,
           max: data.data.max,
           unlimited: data.data.role === "heal_user", // 👈 this is key
         };
-  
+
         const counter = document.getElementById("usage-counter");
-  
+
         if (messageLimit.unlimited) {
           counter.classList.remove("limit-reached");
           counter.innerHTML = `💜 Unlimited messages with the Heal Plan`;
@@ -88,8 +105,33 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
   }
+  function startCountdown(resetAtTimestamp) {
+    const counter = document.getElementById("usage-counter");
   
-
+    function updateTimer() {
+      const now = Date.now() / 1000; // current UNIX time in seconds
+      const remaining = Math.max(0, resetAtTimestamp - now);
+  
+      const hours = Math.floor(remaining / 3600);
+      const minutes = Math.floor((remaining % 3600) / 60);
+      const seconds = Math.floor(remaining % 60);
+  
+      counter.innerHTML = `
+        ⏳ You can send messages again in ${hours}h ${minutes}m ${seconds}s 
+        <a href="/upgrade" style="margin-left: 1rem; text-decoration: underline;">Upgrade</a>
+      `;
+  
+      if (remaining > 0) {
+        setTimeout(updateTimer, 1000);
+      } else {
+        // Auto-refresh the page or re-fetch usage
+        location.reload(); // or fetchMessageUsage()
+      }
+    }
+  
+    updateTimer();
+  }
+  
   // ---------------------------
   // Load History
   // ---------------------------
@@ -197,8 +239,20 @@ document.addEventListener("DOMContentLoaded", function () {
   // Send Message
   // ---------------------------
   function sendMessage() {
-    if (!messageLimit.unlimited && messageLimit.used >= messageLimit.max) {
+    if (isProcessing) return;
 
+    if (!messageLimit.unlimited && messageLimit.used >= messageLimit.max) {
+      
+      sendBtn.disabled = true;
+      userInput.disabled = true;
+      userInput.blur(); // optional: remove cursor/focus
+
+      return;
+    }
+
+    isProcessing = true; // 🔒 lock input
+
+    if (!messageLimit.unlimited && messageLimit.used >= messageLimit.max) {
       const upgradePrompt = document.createElement("div");
       upgradePrompt.className = "usage-toast";
       upgradePrompt.innerHTML = `
@@ -213,7 +267,6 @@ document.addEventListener("DOMContentLoaded", function () {
       messageLimit.used++;
       updateUsageUI();
     }
-    
 
     const message = userInput.value.trim();
     if (!message) return;
@@ -221,6 +274,7 @@ document.addEventListener("DOMContentLoaded", function () {
     appendMessage(message, "user");
     userInput.value = "";
     sendBtn.disabled = true;
+    userInput.disabled = true; // ✅ disables the input field
 
     const aiMessageDiv = document.createElement("div");
     aiMessageDiv.classList.add("message", "ai-message");
@@ -245,6 +299,9 @@ document.addEventListener("DOMContentLoaded", function () {
         typingIndicator.style.display = "none";
         eventSource.close();
         sendBtn.disabled = false;
+        userInput.disabled = false;
+        userInput.focus(); // ✅ auto-focus so user can type again
+        isProcessing = false;
 
         textSpan.innerHTML = marked.parse(markdownBuffer);
         aiMessageDiv.scrollIntoView({ behavior: "smooth" });
@@ -268,6 +325,9 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error("Streaming error:", err);
       eventSource.close();
       sendBtn.disabled = false;
+      userInput.disabled = false;
+      userInput.focus(); // ✅ give them a fresh start
+      isProcessing = false;
       typingIndicator.style.display = "none";
       appendMessage("An error occurred during streaming.", "ai");
     };

@@ -132,7 +132,8 @@ function fetch_chat_history()
 add_action('wp_ajax_fetch_chat_history', 'fetch_chat_history');
 
 function mindthrive_get_message_usage()
-{
+{   $midnight = strtotime('tomorrow'); // midnight tonight
+
     require_once plugin_dir_path(__FILE__) . 'includes/class-usage-tracker.php';
 
     if (!is_user_logged_in()) {
@@ -162,7 +163,8 @@ function mindthrive_get_message_usage()
     wp_send_json_success([
         'used' => $message_count,
         'max'  => $max,
-        'role' => MindThrive_UsageTracker::get_role_slug($user_id)
+        'role' => MindThrive_UsageTracker::get_role_slug($user_id),
+        'reset_at' => $midnight
     ]);
     
 }
