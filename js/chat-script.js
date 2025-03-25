@@ -65,7 +65,12 @@ document.addEventListener("DOMContentLoaded", function () {
           messageLimit = data.data;
       
           // Save role
+          if (!data || !data.data) {
+            console.error("Usage data missing:", data);
+            return;
+          }
           const userRole = data.data.role || "";
+          
       
           // Update UI with role-specific logic
           const counter = document.getElementById("usage-counter");
