@@ -133,6 +133,8 @@ add_action('wp_ajax_fetch_chat_history', 'fetch_chat_history');
 
 function mindthrive_get_message_usage()
 {
+    require_once plugin_dir_path(__FILE__) . 'includes/class-usage-tracker.php';
+
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'Not logged in.']);
     }
@@ -166,6 +168,8 @@ function mindthrive_get_message_usage()
 }
 
 add_action('wp_ajax_get_message_usage', 'mindthrive_get_message_usage');
+add_action('wp_ajax_nopriv_get_message_usage', 'mindthrive_get_message_usage');
+
 
 
 function mindthrive_handle_chat_stream()
@@ -237,7 +241,7 @@ function mindthrive_handle_chat_stream()
                         echo "data: [DONE]\n\n";
                         ob_flush();
                         flush();
-                        return strlen($data);
+                        
                     }
                     $json = json_decode($jsonData, true);
                     if (!empty($json['choices'][0]['delta']['content'])) {
