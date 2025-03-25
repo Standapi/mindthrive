@@ -61,19 +61,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function fetchMessageUsage() {
-
-    if (!messageLimit.unlimited && messageLimit.used >= messageLimit.max) {
-      sendBtn.disabled = true;
-      userInput.disabled = true;
-      userInput.placeholder = "You've reached your daily message limit";
-    
-      const resetAt = data.data.reset_at;
-      startCountdown(resetAt); // ⏳ Start timer
-    
-      return;
-    }
-    
-    
     fetch(mindthriveChat.ajaxurl, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -88,23 +75,37 @@ document.addEventListener("DOMContentLoaded", function () {
           console.error("Missing usage data", data);
           return;
         }
-
+  
         messageLimit = {
           used: data.data.used,
           max: data.data.max,
-          unlimited: data.data.role === "heal_user", // 👈 this is key
+          unlimited: data.data.role === "heal_user",
         };
-
+  
         const counter = document.getElementById("usage-counter");
-
+  
         if (messageLimit.unlimited) {
           counter.classList.remove("limit-reached");
           counter.innerHTML = `💜 Unlimited messages with the Heal Plan`;
-        } else {
-          updateUsageUI();
+          return;
         }
+  
+        if (messageLimit.used >= messageLimit.max) {
+          sendBtn.disabled = true;
+          userInput.disabled = true;
+          userInput.placeholder = "You've reached your daily message limit";
+  
+          const resetAt = data.data.reset_at;
+          startCountdown(resetAt);
+          return;
+        }
+  
+        updateUsageUI();
       });
   }
+  
+
+  
   function startCountdown(resetAtTimestamp) {
     const counter = document.getElementById("usage-counter");
   
@@ -117,9 +118,17 @@ document.addEventListener("DOMContentLoaded", function () {
       const seconds = Math.floor(remaining % 60);
   
       counter.innerHTML = `
-        ⏳ You can send messages again in ${hours}h ${minutes}m ${seconds}s 
-        <a href="/upgrade" style="margin-left: 1rem; text-decoration: underline;">Upgrade</a>
-      `;
+  <div class="usage-limit-banner">
+    <span class="material-symbols-outlined">schedule</span>
+
+
+    <span class="limit-text">
+      <strong>${hours}h ${minutes}m ${seconds}s</strong> until you can send messages again.
+    </span>
+    <a href="/upgrade" class="upgrade-btn">Upgrade</a>
+  </div>
+`;
+
   
       if (remaining > 0) {
         setTimeout(updateTimer, 1000);

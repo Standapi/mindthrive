@@ -436,3 +436,45 @@
 	cursor: not-allowed;
   }
   
+  .usage-limit-banner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: #fcecec;
+	border: 1px solid #ffbaba;
+	border-radius: 8px;
+	padding: 0.75rem 1rem;
+	font-size: 0.95rem;
+	color: #aa0000;
+	margin-top: 1rem;
+	gap: 1rem;
+  }
+  
+  .limit-icon {
+	font-family: 'Material Symbols Outlined';
+	font-size: 1.5rem;
+	color: #a132dc;
+	margin-right: 0.6rem;
+	display: flex;
+	align-items: center;
+  }
+  
+  
+  .limit-text {
+	flex: 1;
+  }
+  
+  .upgrade-btn {
+	background: linear-gradient(to right, #a132dc, #843acb);
+	color: white;
+	padding: 0.5rem 1rem;
+	border-radius: 6px;
+	text-decoration: none;
+	font-weight: bold;
+	transition: background 0.3s ease;
+  }
+  
+  .upgrade-btn:hover {
+	background: #6f28b6;
+  }
+  
