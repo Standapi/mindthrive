@@ -524,3 +524,7 @@ body.dark-mode,
 	transform: translateX(18px);
   }
   
+  .chat-loading-indicator.hidden {
+	display: none;
+  }
+  

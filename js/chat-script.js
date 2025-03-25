@@ -443,6 +443,13 @@ requestAnimationFrame(() => {
         });
     }
   });
+    // ✅ Safety net to hide loading indicator if firstLoadDone never flips
+    setTimeout(() => {
+      if (!firstLoadDone) {
+        loadingIndicator.classList.add("hidden");
+      }
+    }, 2000);
+    
 
   fetchMessageUsage();
 });
