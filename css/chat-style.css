@@ -348,7 +348,6 @@
   ----------------------------------*/
   @media (max-width: 768px) {
 	.chat-box {
-	  margin-top: 80px;
 	  width: 100%;
 	  height: calc(100vh - 60px);
 	  border-radius: 0;
@@ -375,5 +374,153 @@
   @keyframes fadeIn {
 	from { opacity: 0; }
 	to { opacity: 1; }
+  }
+  
+
+  /* Dark Mode Root */
+body.dark-mode,
+.dark-mode .chat-container {
+  background: #121212;
+  color: #f0f0f0;
+}
+
+/* Chat Box */
+.dark-mode .chat-box {
+  background: #1e1e1e;
+}
+
+/* Header */
+.dark-mode .chat-header {
+  background: linear-gradient(to right, #2a1b4a, #3a1e5d);
+}
+
+/* Message Bubbles */
+.dark-mode .ai-message {
+  background: #2a2a2a;
+  color: #d6d6d6;
+}
+.dark-mode .user-message {
+  background: #3a2d58;
+  color: #ffffff;
+}
+
+/* Input */
+.dark-mode .chat-input {
+  background: #1e1e1e;
+  border-top: 1px solid #333;
+}
+.dark-mode .chat-input input {
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
+}
+.dark-mode .chat-input input::placeholder {
+  color: #aaa;
+}
+.dark-mode .chat-input button {
+  background: #5b2ca0;
+}
+.dark-mode .chat-input button:hover {
+  background: #8d41c6;
+}
+
+/* Usage Bar */
+.dark-mode .usage-bar {
+  background: #2a1b4a;
+  color: #d2bfff;
+}
+
+/* Settings Dropdown */
+.dark-mode .settings-menu {
+  background: #2a2a2a;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+.dark-mode .settings-menu button:hover {
+  background-color: #333;
+}
+
+/* Scrollbar (optional) */
+.dark-mode .chat-window::-webkit-scrollbar {
+  width: 6px;
+}
+.dark-mode .chat-window::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+/* ---------------------------------
+🌙 Dark Mode Toggle (Styled Switch)
+----------------------------------*/
+.dark-toggle-container {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.5rem 0.6rem;
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: #333;
+	cursor: pointer;
+  }
+  
+  .dark-toggle-container:hover {
+	background: rgba(0, 0, 0, 0.05);
+  }
+  
+  .dark-mode .dark-toggle-container {
+	color: #fff;
+  }
+  .dark-mode .dark-toggle-container:hover {
+	background: rgba(255, 255, 255, 0.05);
+  }
+  
+  .dark-toggle-container .material-symbols-outlined {
+	font-size: 1rem;
+	vertical-align: middle;
+	margin-right: 0.25rem;
+  }
+  
+  /* Custom Switch Styling */
+  .switch {
+	position: relative;
+	display: inline-block;
+	width: 38px;
+	height: 20px;
+  }
+  
+  .switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+  }
+  
+  .slider {
+	position: absolute;
+	top: 0; left: 0;
+	right: 0; bottom: 0;
+	background-color: #ccc;
+	border-radius: 20px;
+	transition: background-color 0.2s ease;
+	cursor: pointer;
+  }
+  
+  .slider::before {
+	content: "";
+	position: absolute;
+	height: 16px;
+	width: 16px;
+	left: 2px;
+	bottom: 2px;
+	background-color: white;
+	border-radius: 50%;
+	transition: transform 0.2s ease;
+  }
+  
+  input:checked + .slider {
+	background-color: #8d41c6;
+  }
+  
+  input:checked + .slider::before {
+	transform: translateX(18px);
   }
   

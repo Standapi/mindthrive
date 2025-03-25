@@ -6,14 +6,21 @@
                 <img src="http://mindthrive.me/wp-content/uploads/2025/03/logo-mindthrive-white.webp" alt="MindThrive">
             </h2>
             <div class="chat-controls">
-                <button class="menu-btn" id="menu-toggle">☰</button>
-
+                
                 <div class="chat-settings">
-                <button id="settings-toggle" class="settings-btn">
-  <span class="material-symbols-outlined">settings</span>
-</button>
-
+                    <button id="settings-toggle" class="settings-btn">
+                        <span class="material-symbols-outlined">settings</span>
+                    </button>
                     <div class="settings-menu hidden" id="settings-menu">
+                        <div class="dark-toggle-container">
+                        <span><span class="material-symbols-outlined">dark_mode</span> Dark Mode</span>
+
+                            <label class="switch">
+                                <input type="checkbox" id="dark-toggle" />
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
                         <button id="clear-chat-btn">Clear Chat</button>
                         <div class="font-controls">
                             <span>Font Size:</span>
@@ -22,6 +29,7 @@
                         </div>
                     </div>
                 </div>
+                <button class="menu-btn" id="menu-toggle">☰</button>
             </div>
         </div>
 
@@ -31,8 +39,8 @@
         <div class="chat-window" id="chat-window">
             <!-- messages go here -->
             <div id="chat-loading-indicator" class="chat-loading-indicator hidden">
-  Loading previous messages...
-</div>
+                Loading previous messages...
+            </div>
 
 
 

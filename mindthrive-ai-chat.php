@@ -54,32 +54,34 @@ register_activation_hook(__FILE__, 'mindthrive_ai_install');
 /**
  * Enqueue Scripts & Styles
  */
-function mindthrive_ai_enqueue_assets()
-{
-    // Enqueue the CSS
-    wp_enqueue_style(
-        'mindthrive-chat-style',
-        plugin_dir_url(__FILE__) . 'css/chat-style.css',
-        array(),
-        '1.0',
-        'all'
-    );
+function mindthrive_ai_enqueue_assets() {
+    if (!is_page()) return; // fallback if called outside of page context
 
-    // Enqueue the JS
-    wp_enqueue_script(
-        'mindthrive-chat-script',
-        plugin_dir_url(__FILE__) . 'js/chat-script.js',
-        array('jquery'), // dependencies
-        '1.0',
-        true // in footer
-    );
+    // Only enqueue on the chat page (replace with your actual slug or ID)
+    if (is_page('chat') || is_page(123)) { // ✅ Use page slug or ID
+        wp_enqueue_style(
+            'mindthrive-chat-style',
+            plugin_dir_url(__FILE__) . 'css/chat-style.css',
+            array(),
+            '1.0',
+            'all'
+        );
 
-    // Localize (pass data to JS)
-    wp_localize_script('mindthrive-chat-script', 'mindthriveChat', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'security' => wp_create_nonce('mindthrive-chat-nonce'), // matches PHP
-    ));
+        wp_enqueue_script(
+            'mindthrive-chat-script',
+            plugin_dir_url(__FILE__) . 'js/chat-script.js',
+            array('jquery'),
+            '1.0',
+            true
+        );
+
+        wp_localize_script('mindthrive-chat-script', 'mindthriveChat', array(
+            'ajaxurl'  => admin_url('admin-ajax.php'),
+            'security' => wp_create_nonce('mindthrive-chat-nonce'),
+        ));
+    }
 }
+
 add_action('wp_enqueue_scripts', 'mindthrive_ai_enqueue_assets');
 
 /**
