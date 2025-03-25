@@ -181,10 +181,22 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         if (prepend) {
+          const prevHeight = chatWindow.scrollHeight;
+        
           chatWindow.prepend(fragment);
+        
+          // Defer the scroll adjustment until after render
+          setTimeout(() => {
+            requestAnimationFrame(() => {
+              const newHeight = chatWindow.scrollHeight;
+              chatWindow.scrollTop += (newHeight - prevHeight);
+            });
+          }, 0);
         } else {
           chatWindow.appendChild(fragment);
         }
+        
+        
 
         loadedMessageCount += history.length;
       });
