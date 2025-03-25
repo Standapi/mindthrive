@@ -16,7 +16,8 @@ if (!defined('ABSPATH')) {
 /**
  * Create the database table upon plugin activation.
  */
-function mindthrive_verify_request() {
+function mindthrive_verify_request()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'Please log in.']);
     }
@@ -27,10 +28,11 @@ function mindthrive_verify_request() {
 }
 
 
-function mindthrive_ai_install() {
+function mindthrive_ai_install()
+{
     global $wpdb;
 
-    $table_name     = $wpdb->prefix . 'mindthrive_chat_logs';
+    $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
     $charset_collate = $wpdb->get_charset_collate();
 
     // SQL to create table if not exists
@@ -52,7 +54,8 @@ register_activation_hook(__FILE__, 'mindthrive_ai_install');
 /**
  * Enqueue Scripts & Styles
  */
-function mindthrive_ai_enqueue_assets() {
+function mindthrive_ai_enqueue_assets()
+{
     // Enqueue the CSS
     wp_enqueue_style(
         'mindthrive-chat-style',
@@ -73,7 +76,7 @@ function mindthrive_ai_enqueue_assets() {
 
     // Localize (pass data to JS)
     wp_localize_script('mindthrive-chat-script', 'mindthriveChat', array(
-        'ajaxurl'  => admin_url('admin-ajax.php'),
+        'ajaxurl' => admin_url('admin-ajax.php'),
         'security' => wp_create_nonce('mindthrive-chat-nonce'), // matches PHP
     ));
 }
@@ -82,7 +85,8 @@ add_action('wp_enqueue_scripts', 'mindthrive_ai_enqueue_assets');
 /**
  * Shortcode to Display the Chat Interface
  */
-function mindthrive_chat_shortcode() {
+function mindthrive_chat_shortcode()
+{
     ob_start();
     include plugin_dir_path(__FILE__) . 'chat-interface.php';
     return ob_get_clean();
@@ -97,7 +101,8 @@ include plugin_dir_path(__FILE__) . 'chat-handler.php';
 /**
  * Fetch user's recent chat history.
  */
-function fetch_chat_history() {
+function fetch_chat_history()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'Please log in.']);
     }
@@ -109,7 +114,7 @@ function fetch_chat_history() {
 
     $history = MindThrive_ChatLogger::get_history($user_id, 20, $offset);
 
-        global $wpdb;
+    global $wpdb;
     $total = $wpdb->get_var(
         $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}mindthrive_chat_logs WHERE user_id = %d", $user_id)
     );
@@ -126,7 +131,8 @@ function fetch_chat_history() {
 
 add_action('wp_ajax_fetch_chat_history', 'fetch_chat_history');
 
-function mindthrive_get_message_usage() {
+function mindthrive_get_message_usage()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'Not logged in.']);
     }
@@ -153,14 +159,15 @@ function mindthrive_get_message_usage() {
 
     wp_send_json_success([
         'used' => $message_count,
-        'max'  => $max
+        'max' => $max
     ]);
 }
 
 add_action('wp_ajax_get_message_usage', 'mindthrive_get_message_usage');
 
 
-function mindthrive_handle_chat_stream() {
+function mindthrive_handle_chat_stream()
+{
     // ✅ Step 1: Disable buffering and compression
     while (ob_get_level()) {
         ob_end_clean();
@@ -193,47 +200,50 @@ function mindthrive_handle_chat_stream() {
 
     if (MindThrive_UsageTracker::is_over_limit($user_id)) {
         echo "data: " . json_encode(['error' => 'You have reached your daily message limit.']) . "\n\n";
-        ob_flush(); flush();
+        ob_flush();
+        flush();
         exit;
     }
-   
+
 
 
 
     // ✅ Step 3: Insert initial user message to DB
     require_once plugin_dir_path(__FILE__) . 'includes/class-chat-logger.php';
-$log_id = MindThrive_ChatLogger::log_user_message($user_id, $message);
+    $log_id = MindThrive_ChatLogger::log_user_message($user_id, $message);
 
-require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
     $payload = MindThrive_OpenAI_Service::build_payload($user_id, $message);
     // ✅ Step 4: Prepare GPT streaming request
     $payload['stream'] = true;
 
     $ch = curl_init('https://api.openai.com/v1/chat/completions');
     curl_setopt_array($ch, [
-        CURLOPT_POST           => true,
-        CURLOPT_HTTPHEADER     => [
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => [
             'Authorization: Bearer ' . trim(MINDTHRIVE_OPENAI_API_KEY),
             'Content-Type: application/json'
         ],
-        CURLOPT_POSTFIELDS     => json_encode($payload),
+        CURLOPT_POSTFIELDS => json_encode($payload),
         CURLOPT_RETURNTRANSFER => false,
-        CURLOPT_WRITEFUNCTION  => function($ch, $data) use ($wpdb, $table_name, $log_id) {
+        CURLOPT_WRITEFUNCTION => function ($ch, $data) use ($wpdb, $table_name, $log_id) {
             $lines = explode("\n", $data);
             foreach ($lines as $line) {
                 if (strpos($line, 'data: ') === 0) {
                     $jsonData = substr($line, 6);
                     if (trim($jsonData) === '[DONE]') {
                         echo "data: [DONE]\n\n";
-                        ob_flush(); flush();
+                        ob_flush();
+                        flush();
                         return strlen($data);
                     }
                     $json = json_decode($jsonData, true);
                     if (!empty($json['choices'][0]['delta']['content'])) {
                         $content = $json['choices'][0]['delta']['content'];
                         echo "data: " . json_encode(['content' => $content]) . "\n\n";
-                        ob_flush(); flush();
-                        
+                        ob_flush();
+                        flush();
+
 
                         // ✅ Update DB response incrementally
                         MindThrive_ChatLogger::update_ai_response($log_id, $content);
@@ -248,15 +258,16 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
 
     // ✅ Step 5: Execute and clean up
     curl_exec($ch);
-                // Once full message received, increment usage
-                MindThrive_UsageTracker::increment_usage($user_id);
-    
-                return strlen($data);
+    // Once full message received, increment usage
+    MindThrive_UsageTracker::increment_usage($user_id);
+
+    return strlen($data);
     if (curl_errno($ch)) {
         echo "data: " . json_encode(['error' => curl_error($ch)]) . "\n\n";
-        ob_flush(); flush();
+        ob_flush();
+        flush();
     }
-    
+
     curl_close($ch);
     exit;
 }
@@ -268,7 +279,8 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
 add_action('wp_ajax_mindthrive_chat_stream', 'mindthrive_handle_chat_stream');
 add_action('wp_ajax_nopriv_mindthrive_chat_stream', 'mindthrive_handle_chat_stream');
 
-function clear_chat_history() {
+function clear_chat_history()
+{
     check_ajax_referer('mindthrive-chat-nonce', 'security');
 
     if (!is_user_logged_in()) {

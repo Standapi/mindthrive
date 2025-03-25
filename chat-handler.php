@@ -1,18 +1,19 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
     exit;
 }
 
 /**
  * Handles AI Chat AJAX Request
  */
-function mindthrive_handle_chat() {
+function mindthrive_handle_chat()
+{
     check_ajax_referer('mindthrive-chat-nonce', 'security');
     mindthrive_verify_request();
 
     $user_id = get_current_user_id();
     $message = isset($_POST['message']) ? sanitize_text_field($_POST['message']) : '';
-    $today   = date('Y-m-d');
+    $today = date('Y-m-d');
 
     require_once plugin_dir_path(__FILE__) . 'includes/class-openai-service.php';
     $payload = MindThrive_OpenAI_Service::build_payload($user_id, $message);
@@ -22,16 +23,16 @@ function mindthrive_handle_chat() {
     if (MindThrive_UsageTracker::is_over_limit($user_id)) {
         wp_send_json_error(['message' => 'You have reached your daily message limit.']);
     }
-    
+
 
     // Send to OpenAI
     $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
         'headers' => [
             'Authorization' => 'Bearer ' . trim(MINDTHRIVE_OPENAI_API_KEY),
-            'Content-Type'  => 'application/json'
+            'Content-Type' => 'application/json'
         ],
-        'body'    => json_encode($payload),
-        'method'  => 'POST',
+        'body' => json_encode($payload),
+        'method' => 'POST',
         'timeout' => 30,
     ]);
 

@@ -1,13 +1,17 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH'))
+    exit;
 
-class MindThrive_OpenAI_Service {
+class MindThrive_OpenAI_Service
+{
 
-    public static function get_system_prompt() {
+    public static function get_system_prompt()
+    {
         return "You are a compassionate AI therapist. You are here to listen, ask questions, and help sort through thoughts.";
     }
 
-    public static function build_payload($user_id, $message, $include_history = true) {
+    public static function build_payload($user_id, $message, $include_history = true)
+    {
         global $wpdb;
         $table_name = $wpdb->prefix . 'mindthrive_chat_logs';
 
@@ -32,12 +36,12 @@ class MindThrive_OpenAI_Service {
         $messages[] = ['role' => 'user', 'content' => $message];
 
         return [
-            "model"       => "gpt-4o-mini",
-            "messages"    => $messages,
+            "model" => "gpt-4o-mini",
+            "messages" => $messages,
             "temperature" => 0.7,
-            "max_tokens"  => 1000,
-            "top_p"       => 1,
-            "stream"      => false
+            "max_tokens" => 1000,
+            "top_p" => 1,
+            "stream" => false
         ];
     }
 }
