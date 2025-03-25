@@ -75,48 +75,46 @@ document.addEventListener("DOMContentLoaded", function () {
           console.error("Missing usage data", data);
           return;
         }
-  
+
         messageLimit = {
           used: data.data.used,
           max: data.data.max,
           unlimited: data.data.role === "heal_user",
         };
-  
+
         const counter = document.getElementById("usage-counter");
-  
+
         if (messageLimit.unlimited) {
           counter.classList.remove("limit-reached");
           counter.innerHTML = `💜 Unlimited messages with the Heal Plan`;
           return;
         }
-  
+
         if (messageLimit.used >= messageLimit.max) {
           sendBtn.disabled = true;
           userInput.disabled = true;
           userInput.placeholder = "You've reached your daily message limit";
-  
+
           const resetAt = data.data.reset_at;
           startCountdown(resetAt);
           return;
         }
-  
+
         updateUsageUI();
       });
   }
-  
 
-  
   function startCountdown(resetAtTimestamp) {
     const counter = document.getElementById("usage-counter");
-  
+
     function updateTimer() {
       const now = Date.now() / 1000; // current UNIX time in seconds
       const remaining = Math.max(0, resetAtTimestamp - now);
-  
+
       const hours = Math.floor(remaining / 3600);
       const minutes = Math.floor((remaining % 3600) / 60);
       const seconds = Math.floor(remaining % 60);
-  
+
       counter.innerHTML = `
   <div class="usage-limit-banner">
     <span class="material-symbols-outlined">schedule</span>
@@ -129,7 +127,6 @@ document.addEventListener("DOMContentLoaded", function () {
   </div>
 `;
 
-  
       if (remaining > 0) {
         setTimeout(updateTimer, 1000);
       } else {
@@ -137,10 +134,10 @@ document.addEventListener("DOMContentLoaded", function () {
         location.reload(); // or fetchMessageUsage()
       }
     }
-  
+
     updateTimer();
   }
-  
+
   // ---------------------------
   // Load History
   // ---------------------------
@@ -181,21 +178,10 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         if (prepend) {
-          const prevHeight = chatWindow.scrollHeight;
-        
           chatWindow.prepend(fragment);
-        
-          // Defer the scroll adjustment until after render
-          setTimeout(() => {
-            requestAnimationFrame(() => {
-              const newHeight = chatWindow.scrollHeight;
-              chatWindow.scrollTop += (newHeight - prevHeight);
-            });
-          }, 0);
         } else {
           chatWindow.appendChild(fragment);
         }
-        
         
 
         loadedMessageCount += history.length;
@@ -263,7 +249,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (isProcessing) return;
 
     if (!messageLimit.unlimited && messageLimit.used >= messageLimit.max) {
-      
       sendBtn.disabled = true;
       userInput.disabled = true;
       userInput.blur(); // optional: remove cursor/focus
