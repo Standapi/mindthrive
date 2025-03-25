@@ -15,6 +15,18 @@ document.addEventListener("DOMContentLoaded", function () {
   let firstLoadDone = false;
   let isProcessing = false;
 
+  // Restore draft on load
+const savedDraft = localStorage.getItem("mindthrive_draft");
+if (savedDraft) {
+  userInput.value = savedDraft;
+}
+
+// Save draft as user types
+userInput.addEventListener("input", () => {
+  localStorage.setItem("mindthrive_draft", userInput.value);
+});
+
+
   function appendMessage(text, sender) {
     if (!chatWindow) return;
 
@@ -279,17 +291,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
     appendMessage(message, "user");
     userInput.value = "";
+    localStorage.removeItem("mindthrive_draft");
+
     sendBtn.disabled = true;
     userInput.disabled = true; // ✅ disables the input field
 
     const aiMessageDiv = document.createElement("div");
-    aiMessageDiv.classList.add("message", "ai-message");
-    const textSpan = document.createElement("div");
-    textSpan.classList.add("message-text");
-    aiMessageDiv.appendChild(textSpan);
-    chatWindow.appendChild(aiMessageDiv);
+aiMessageDiv.classList.add("message", "ai-message");
 
-    typingIndicator.style.display = "block";
+const textSpan = document.createElement("div");
+textSpan.classList.add("message-text");
+
+// ⬇️ Add typing dots inside the message bubble
+textSpan.innerHTML = `
+  <div class="typing-indicator-inline">
+    <span></span><span></span><span></span>
+  </div>
+`;
+
+aiMessageDiv.appendChild(textSpan);
+chatWindow.appendChild(aiMessageDiv);
+requestAnimationFrame(() => {
+  aiMessageDiv.scrollIntoView({ behavior: "smooth", block: "end" });
+});
+
+
+
 
     const eventSource = new EventSource(
       `${
@@ -302,8 +329,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     eventSource.onmessage = (e) => {
       if (e.data === "[DONE]") {
-        typingIndicator.style.display = "none";
         eventSource.close();
+        textSpan.innerHTML = marked.parse(markdownBuffer); // ✅ replaces typing dots
         sendBtn.disabled = false;
         userInput.disabled = false;
         userInput.focus(); // ✅ auto-focus so user can type again

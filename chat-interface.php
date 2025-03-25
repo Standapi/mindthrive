@@ -9,7 +9,10 @@
                 <button class="menu-btn" id="menu-toggle">☰</button>
 
                 <div class="chat-settings">
-                    <button id="settings-toggle" class="settings-btn">⚙️</button>
+                <button id="settings-toggle" class="settings-btn">
+  <span class="material-symbols-outlined">settings</span>
+</button>
+
                     <div class="settings-menu hidden" id="settings-menu">
                         <button id="clear-chat-btn">Clear Chat</button>
                         <div class="font-controls">
@@ -39,9 +42,6 @@
                     Hey! I'm here to listen, ask questions, and help you sort through your thoughts.
                 </div>
             </div>
-        </div>
-        <div id="typing-indicator" class="typing-indicator" style="display: none;">
-            <span></span><span></span><span></span>
         </div>
 
         <!-- Chat Input -->
