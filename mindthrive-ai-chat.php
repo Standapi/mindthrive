@@ -268,16 +268,18 @@ function mindthrive_handle_chat_stream()
 
     // ✅ Step 5: Execute and clean up
     curl_exec($ch);
-    // Once full message received, increment usage
-    MindThrive_UsageTracker::increment_usage($user_id);
 
+    // ✅ Final flush after all output
+    ob_flush();
+    flush();
+    
+    MindThrive_UsageTracker::increment_usage($user_id);
     
     if (curl_errno($ch)) {
         echo "data: " . json_encode(['error' => curl_error($ch)]) . "\n\n";
-        ob_flush();
-        flush();
+        ob_flush(); flush();
     }
-
+    
     curl_close($ch);
     exit;
 }
