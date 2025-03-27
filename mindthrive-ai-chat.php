@@ -271,7 +271,7 @@ function mindthrive_handle_chat_stream()
     // Once full message received, increment usage
     MindThrive_UsageTracker::increment_usage($user_id);
 
-    return strlen($data);
+    
     if (curl_errno($ch)) {
         echo "data: " . json_encode(['error' => curl_error($ch)]) . "\n\n";
         ob_flush();

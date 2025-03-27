@@ -35,25 +35,25 @@ class MindThrive_OpenAI_Service
 
         $messages[] = ['role' => 'user', 'content' => $message];
 
-        $model = defined('MINDTHRIVE_OPENAI_MODEL') ? MINDTHRIVE_OPENAI_MODEL : 'gpt-4o-mini';
+        $model = defined('MINDTHRIVE_OPENAI_MODEL') ? MINDTHRIVE_OPENAI_MODEL : 'gpt-4o';
 
         $payload = [
-        "model" => $model,
-        "messages" => $messages,
-        "temperature" => 0.7,
-        "max_tokens" => 1000,
-        "top_p" => 1,
-        "stream" => false
+            'model' => $model,
+            'messages' => $messages,
+            'stream' => true, // Always streaming
         ];
 
-        // ✅ Add o3-specific options
-        if ($model === 'o3-mini') {
-        $payload["response_format"] = ["type" => "text"];
-        $payload["reasoning_effort"] = "medium";
-        $payload["store"] = true;
+        if (in_array($model, ['o3-mini', 'o3-large'])) {
+            $payload['response_format'] = ['type' => 'text'];
+            $payload['reasoning_effort'] = 'medium';
+            $payload['store'] = true;
+        } else {
+            $payload['temperature'] = 0.7;
+            $payload['top_p'] = 1;
+            $payload['max_tokens'] = 1000;
         }
-
         return $payload;
 
-            }
+
+    }
 }
