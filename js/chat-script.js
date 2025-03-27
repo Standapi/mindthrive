@@ -365,9 +365,7 @@ requestAnimationFrame(() => {
         const json = JSON.parse(e.data);
         if (json.content) {
           markdownBuffer += json.content;
-          // Append directly as plain text first
-let newTextNode = document.createTextNode(json.content);
-textSpan.appendChild(newTextNode);
+
 
           textSpan.scrollIntoView({ behavior: "auto" });
         }
