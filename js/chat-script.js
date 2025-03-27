@@ -16,35 +16,37 @@ document.addEventListener("DOMContentLoaded", function () {
   let isProcessing = false;
 
   // Restore draft on load
-const savedDraft = localStorage.getItem("mindthrive_draft");
-if (savedDraft) {
-  userInput.value = savedDraft;
-}
+  const savedDraft = localStorage.getItem("mindthrive_draft");
+  if (savedDraft) {
+    userInput.value = savedDraft;
+  }
 
-const darkToggle = document.getElementById("dark-toggle");
+  const darkToggle = document.getElementById("dark-toggle");
 
-// Restore mode from localStorage
-const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-const storedPreference = localStorage.getItem("darkMode");
+  // Restore mode from localStorage
+  const systemPrefersDark = window.matchMedia(
+    "(prefers-color-scheme: dark)"
+  ).matches;
+  const storedPreference = localStorage.getItem("darkMode");
 
-if (storedPreference === "true" || (storedPreference === null && systemPrefersDark)) {
-  document.body.classList.add("dark-mode");
-  darkToggle.checked = true;
-}
+  if (
+    storedPreference === "true" ||
+    (storedPreference === null && systemPrefersDark)
+  ) {
+    document.body.classList.add("dark-mode");
+    darkToggle.checked = true;
+  }
 
+  // On toggle
+  darkToggle.addEventListener("change", () => {
+    document.body.classList.toggle("dark-mode");
+    localStorage.setItem("darkMode", darkToggle.checked);
+  });
 
-// On toggle
-darkToggle.addEventListener("change", () => {
-  document.body.classList.toggle("dark-mode");
-  localStorage.setItem("darkMode", darkToggle.checked);
-});
-
-
-// Save draft as user types
-userInput.addEventListener("input", () => {
-  localStorage.setItem("mindthrive_draft", userInput.value);
-});
-
+  // Save draft as user types
+  userInput.addEventListener("input", () => {
+    localStorage.setItem("mindthrive_draft", userInput.value);
+  });
 
   function appendMessage(text, sender) {
     if (!chatWindow) return;
@@ -213,7 +215,6 @@ userInput.addEventListener("input", () => {
         } else {
           chatWindow.appendChild(fragment);
         }
-        
 
         loadedMessageCount += history.length;
       });
@@ -316,26 +317,23 @@ userInput.addEventListener("input", () => {
     userInput.disabled = true; // ✅ disables the input field
 
     const aiMessageDiv = document.createElement("div");
-aiMessageDiv.classList.add("message", "ai-message");
+    aiMessageDiv.classList.add("message", "ai-message");
 
-const textSpan = document.createElement("div");
-textSpan.classList.add("message-text");
+    const textSpan = document.createElement("div");
+    textSpan.classList.add("message-text");
 
-// ⬇️ Add typing dots inside the message bubble
-textSpan.innerHTML = `
+    // ⬇️ Add typing dots inside the message bubble
+    textSpan.innerHTML = `
   <div class="typing-indicator-inline">
     <span></span><span></span><span></span>
   </div>
 `;
 
-aiMessageDiv.appendChild(textSpan);
-chatWindow.appendChild(aiMessageDiv);
-requestAnimationFrame(() => {
-  aiMessageDiv.scrollIntoView({ behavior: "smooth", block: "end" });
-});
-
-
-
+    aiMessageDiv.appendChild(textSpan);
+    chatWindow.appendChild(aiMessageDiv);
+    requestAnimationFrame(() => {
+      aiMessageDiv.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
 
     const eventSource = new EventSource(
       `${
@@ -355,7 +353,8 @@ requestAnimationFrame(() => {
         userInput.focus(); // ✅ auto-focus so user can type again
         isProcessing = false;
 
-        textSpan.innerHTML = marked.parse(markdownBuffer);
+        const finalHTML = marked.parse(markdownBuffer);
+        textSpan.innerHTML = finalHTML;
         aiMessageDiv.scrollIntoView({ behavior: "smooth" });
         markdownBuffer = "";
         return;
@@ -365,7 +364,10 @@ requestAnimationFrame(() => {
         const json = JSON.parse(e.data);
         if (json.content) {
           markdownBuffer += json.content;
-          textSpan.textContent += json.content;
+          // Append directly as plain text first
+          let newTextNode = document.createTextNode(json.content);
+          textSpan.appendChild(newTextNode);
+
           textSpan.scrollIntoView({ behavior: "auto" });
         }
       } catch (err) {
@@ -443,13 +445,12 @@ requestAnimationFrame(() => {
         });
     }
   });
-    // ✅ Safety net to hide loading indicator if firstLoadDone never flips
-    setTimeout(() => {
-      if (!firstLoadDone) {
-        loadingIndicator.classList.add("hidden");
-      }
-    }, 2000);
-    
+  // ✅ Safety net to hide loading indicator if firstLoadDone never flips
+  setTimeout(() => {
+    if (!firstLoadDone) {
+      loadingIndicator.classList.add("hidden");
+    }
+  }, 2000);
 
   fetchMessageUsage();
 });
