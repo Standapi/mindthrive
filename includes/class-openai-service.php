@@ -50,7 +50,7 @@ class MindThrive_OpenAI_Service
         } else {
             $payload['temperature'] = 0.7;
             $payload['top_p'] = 1;
-            $payload['max_tokens'] = 1000;
+            $payload['max_tokens'] = 5000;
         }
         return $payload;
 

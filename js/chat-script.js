@@ -278,9 +278,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Send Message
   // ---------------------------
   function sendMessage() {
-    let tokenQueue = [];
-    let typingInterval;
-
+    
     if (isProcessing) return;
 
     if (!messageLimit.unlimited && messageLimit.used >= messageLimit.max) {
@@ -347,37 +345,31 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     let markdownBuffer = "";
 
-    typingInterval = setInterval(() => {
-      if (tokenQueue.length > 0) {
-        const nextToken = tokenQueue.shift();
-        const node = document.createTextNode(nextToken);
-        textSpan.appendChild(node);
-        textSpan.scrollIntoView({ behavior: "auto" });
-      }
-    }, 1000); // ⏱ Adjust typing speed here
-    
-
     eventSource.onmessage = (e) => {
       if (e.data === "[DONE]") {
         eventSource.close();
-        clearInterval(typingInterval); // stop animation
-        const finalHTML = marked.parse(markdownBuffer);
-        textSpan.innerHTML = finalHTML;
-    
+        textSpan.innerHTML = marked.parse(markdownBuffer); // ✅ replaces typing dots
         sendBtn.disabled = false;
         userInput.disabled = false;
-        userInput.focus();
+        userInput.focus(); // ✅ auto-focus so user can type again
         isProcessing = false;
-    
+
+        const finalHTML = marked.parse(markdownBuffer);
+        textSpan.innerHTML = finalHTML;
         aiMessageDiv.scrollIntoView({ behavior: "smooth" });
+        markdownBuffer = "";
         return;
       }
-    
+
       try {
         const json = JSON.parse(e.data);
         if (json.content) {
           markdownBuffer += json.content;
-          tokenQueue.push(json.content);
+          // Append directly as plain text first
+          let newTextNode = document.createTextNode(json.content);
+          textSpan.appendChild(newTextNode);
+
+          textSpan.scrollIntoView({ behavior: "auto" });
         }
       } catch (err) {
         console.error("Streaming error:", err, e.data);
