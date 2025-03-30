@@ -471,3 +471,16 @@ function resizeFont(sizeChange) {
 document.getElementById("close-plan-popup").addEventListener("click", function () {
   document.getElementById("plan-popup").classList.add("hidden");
 });
+
+// Show plan popup if URL contains #plan-popup
+if (window.location.hash === "#plan-popup") {
+  const popup = document.getElementById("plan-popup");
+  if (popup) popup.classList.remove("hidden");
+}
+if (window.location.hash === "#plan-popup") {
+  const popup = document.getElementById("plan-popup");
+  if (popup) popup.classList.remove("hidden");
+
+  // Clean the hash (optional)
+  history.replaceState(null, "", window.location.pathname);
+}
