@@ -15,6 +15,21 @@ document.addEventListener("DOMContentLoaded", function () {
   let firstLoadDone = false;
   let isProcessing = false;
 
+  const menuDropdown = document.getElementById("menu-dropdown");
+
+  menuBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    menuDropdown.classList.toggle("hidden");
+  });
+  
+  // Close the menu if clicked outside
+  document.addEventListener("click", function (e) {
+    if (!menuDropdown.contains(e.target) && e.target !== menuBtn) {
+      menuDropdown.classList.add("hidden");
+    }
+  });
+  
+
   // Restore draft on load
 const savedDraft = localStorage.getItem("mindthrive_draft");
 if (savedDraft) {
@@ -81,11 +96,9 @@ userInput.addEventListener("input", () => {
     }
 
     if (messageLimit.used >= messageLimit.max) {
-      counter.classList.add("limit-reached");
-      counter.innerHTML = `
-        🔒 Daily Message limit reached — 
-        <a href="/upgrade" style="color: inherit; text-decoration: underline; font-weight: 600;">Upgrade to continue</a>
-      `;
+      document.getElementById("plan-popup").classList.remove("hidden");
+      return;
+  
     } else {
       counter.innerHTML = `Messages used: <strong>${messageLimit.used}</strong> / ${messageLimit.max}`;
     }
@@ -397,16 +410,7 @@ requestAnimationFrame(() => {
     }
   });
 
-  menuBtn?.addEventListener("click", () => {
-    if (
-      window.innerWidth < 768 &&
-      typeof elementorProFrontend !== "undefined"
-    ) {
-      elementorProFrontend.modules?.popup?.showPopup({ id: 55 });
-    } else {
-      window.location.href = "/menu";
-    }
-  });
+
 
   settingsToggle.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -462,3 +466,8 @@ function resizeFont(sizeChange) {
     msg.style.fontSize = currentSize + sizeChange + "px";
   });
 }
+
+
+document.getElementById("close-plan-popup").addEventListener("click", function () {
+  document.getElementById("plan-popup").classList.add("hidden");
+});

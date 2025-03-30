@@ -29,7 +29,17 @@
                         </div>
                     </div>
                 </div>
-                <button class="menu-btn" id="menu-toggle">☰</button>
+                <button type="button" class="menu-btn" id="menu-toggle">☰</button>
+
+                <div id="menu-dropdown" class="menu-dropdown hidden">
+  <ul>
+    <li><a href="/dashboard">Dashboard</a></li>
+    <li><a href="/profile">My Profile</a></li>
+    <li><a href="/upgrade">Upgrade</a></li>
+    <li><a href="/logout">Logout</a></li>
+  </ul>
+</div>
+
             </div>
         </div>
 
@@ -61,6 +71,49 @@
             Loading usage...
         </div>
     </div>
+
+
+    <div id="plan-popup" class="plan-popup hidden">
+  <div class="plan-popup-overlay"></div>
+  <div class="plan-popup-content">
+    <button class="popup-close-btn" id="close-plan-popup">✖</button>
+    <span class="badge">UPGRADE</span>
+    <h2 class="section-title">Choose the right plan for your journey</h2>
+    <p class="subheading-center">You've reached your daily limit. Unlock more support by upgrading your plan:</p>
+
+    <div class="pricing-grid">
+
+      <!-- Plan: Empower -->
+      <div class="pricing-card featured">
+        <div class="most-popular">Most Popular</div>
+        <h2>Empower</h2>
+        <p class="price">$14.99 <span>/month</span></p>
+        <ul class="pricing-features">
+          <li>🔄 Unlimited messages</li>
+          <li>⏱️ Faster response time</li>
+          <li>🧘 Emotional check-ins</li>
+          <li>🤖 Superior AI guidance</li>
+        </ul>
+        <a href="/subscribe/empower" class="btn btn-primary">Choose Empower</a>
+      </div>
+
+      <!-- Plan: Heal -->
+      <div class="pricing-card">
+        <h2>Heal</h2>
+        <p class="price">$29.99 <span>/month</span></p>
+        <ul class="pricing-features">
+          <li>🔓 Unlimited messages</li>
+          <li>📊 Emotional analytics</li>
+          <li>🧠 Advanced insight tracking</li>
+          <li>🤖 Best AI guidance</li>
+        </ul>
+        <a href="/subscribe/heal" class="btn btn-secondary">Choose Heal</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 </div>
 <!-- Usage Counter -->
 
